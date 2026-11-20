@@ -1,4 +1,4 @@
-# AGENTS.md — `us-home-energy-calcs` (HomeWattCalc)
+# AGENTS.md — `us-home-energy-calcs` (HomeEnergyCalcs)
 
 > Diretrizes técnicas, editoriais e de SEO para desenvolvimento do hub de calculadoras interativas de energia residencial nos EUA.
 
@@ -6,7 +6,7 @@
 
 ## 1. Propósito e Modelo de Negócio
 
-- Construir um site estático de alta velocidade em inglês americano (**marca provisória: HomeWattCalc**) focado em **ferramentas interativas de economia energética residencial nos EUA** (EV Home Charging, Heat Pump vs. Gas Furnace e Solar Payback).
+- Construir um site estático de alta velocidade em inglês americano (**marca provisória: HomeEnergyCalcs**) focado em **ferramentas interativas de economia energética residencial nos EUA** (EV Home Charging, Heat Pump vs. Gas Furnace e Solar Payback).
 - Monetização passiva e escalável sem vender software/assinatura:
   1. **Google AdSense** após indexação inicial.
   2. **Journey by Mediavine** ao atingir **5.000 sessões/mês de países Tier-1** e **4 meses de idade do domínio** (repasse 70%).

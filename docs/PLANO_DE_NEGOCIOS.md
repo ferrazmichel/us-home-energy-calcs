@@ -1,4 +1,4 @@
-# Plano de Negócios — HomeWattCalc (Calculadoras de Energia EUA)
+# Plano de Negócios — HomeEnergyCalcs (Calculadoras de Energia EUA)
 
 > **Data de referência:** 19/11/2026  
 > **Objetivo:** Construir um ativo digital próprio com custo fixo de ~US\$ 10–12/ano, manutenção quase zero e renda recorrente em dólar via publicidade programática e afiliados nos EUA.

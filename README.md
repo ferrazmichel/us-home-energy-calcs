@@ -1,4 +1,4 @@
-# US Home Energy Calculators — HomeWattCalc
+# US Home Energy Calculators — HomeEnergyCalcs
 
 > Hub de calculadoras interativas de energia residencial para os **50 estados dos EUA + Washington, D.C.**, projetado para tráfego orgânico americano (SEO programático) e monetização via AdSense → Journey by Mediavine + afiliados.
 

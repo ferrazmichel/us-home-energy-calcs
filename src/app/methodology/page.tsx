@@ -4,7 +4,7 @@ import { DATA_METADATA, US_NATIONAL_AVERAGE } from "@/data/usStatesEnergy";
 export const metadata: Metadata = {
   title: "Methodology & Data Sources",
   description:
-    "Exact formulas, charging efficiency assumptions, and US Energy Information Administration (EIA) data sources powering HomeWattCalc.",
+    "Exact formulas, charging efficiency assumptions, and US Energy Information Administration (EIA) data sources powering HomeEnergyCalcs.",
   alternates: {
     canonical: "/methodology",
   },
@@ -17,7 +17,7 @@ export default function MethodologyPage() {
         Methodology &amp; Data Sources
       </h1>
       <p className="mt-3 text-base leading-relaxed text-slate-600">
-        HomeWattCalc provides transparent, non-gated energy operating cost estimates so US
+        HomeEnergyCalcs provides transparent, non-gated energy operating cost estimates so US
         households can model real-world numbers without submitting personal contact information.
       </p>
 

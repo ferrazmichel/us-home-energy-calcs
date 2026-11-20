@@ -30,7 +30,7 @@
 
 Prefira um domínio curto, fácil de digitar e com cara de ferramenta confiável nos EUA (evite hífens e números). Sugestões para checar disponibilidade (preço de custo ~US\$ 10,44/ano no **Cloudflare Registrar** ou Porkbun):
 
-- `homewattcalc.com`
+- `homeenergycalcs.com`
 - `wattwiseus.com`
 - `kilowattroi.com`
 - `electrifycost.com`
