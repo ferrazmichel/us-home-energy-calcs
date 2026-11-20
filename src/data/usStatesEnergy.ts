@@ -711,3 +711,15 @@ export function getRelatedStates(current: StateEnergyProfile, limit = 6): StateE
     (item) => item.region === current.region && item.slug !== current.slug
   ).slice(0, limit);
 }
+
+export function getClimateEvNote(zone: ClimateZone): string {
+  switch (zone) {
+    case "cold":
+      return "Cold winter temperatures increase cabin heating demand and temporarily raise battery internal resistance. Preconditioning your EV while plugged into a Level 2 home charger preserves driving range without draining the pack.";
+    case "hot":
+      return "Mild winters help maintain high annual EV efficiency, while summer air conditioning adds a modest load. Hot-climate states also pair especially well with off-peak EV utility plans and residential rooftop solar.";
+    case "mixed":
+    default:
+      return "Four-season moderate temperatures keep real-world EV efficiency close to EPA ratings across most of the year, with modest winter heating losses offset by efficient spring and autumn commuting.";
+  }
+}

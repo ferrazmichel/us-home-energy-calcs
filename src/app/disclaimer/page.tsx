@@ -35,6 +35,19 @@ export default function DisclaimerPage() {
             licensed contractor, or qualified tax advisor before making purchase decisions.
           </p>
         </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-slate-900">
+            Advertising &amp; Affiliate Disclosure
+          </h2>
+          <p className="mt-2">
+            {SITE_CONFIG.name} is free to use and may be supported by display advertising and
+            affiliate links (including Amazon Associates links for qualifying home EV chargers and
+            energy monitors). If you purchase a product through an affiliate link, we may earn a
+            commission at no additional cost to you. Advertising and affiliate relationships never
+            alter our utility datasets or calculator results.
+          </p>
+        </section>
       </div>
     </div>
   );

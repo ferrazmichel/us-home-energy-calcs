@@ -2,25 +2,62 @@
 
 import { useMemo, useState } from "react";
 import type { StateEnergyProfile } from "@/data/usStatesEnergy";
-import { calculateEvChargingCosts, formatUsd } from "@/lib/calculators";
+import {
+  calculateEvChargingCosts,
+  DEFAULT_EV_ASSUMPTIONS,
+  EV_PRESETS,
+  formatUsd,
+  GAS_PRESETS,
+} from "@/lib/calculators";
 
 interface EvChargingCalculatorProps {
   profile: StateEnergyProfile;
 }
 
+function parseInputNumber(raw: string, fallback: number, min: number, max: number): number {
+  const trimmed = raw.trim();
+  if (trimmed === "") return fallback;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
 export default function EvChargingCalculator({ profile }: EvChargingCalculatorProps) {
-  const [annualMiles, setAnnualMiles] = useState<number>(13500);
-  const [evMilesPerKwh, setEvMilesPerKwh] = useState<number>(3.4);
-  const [gasVehicleMpg, setGasVehicleMpg] = useState<number>(28);
-  const [electricityCentsPerKwh, setElectricityCentsPerKwh] = useState<number>(
-    profile.electricityCentsPerKwh
+  const [annualMiles, setAnnualMiles] = useState<number>(DEFAULT_EV_ASSUMPTIONS.annualMiles);
+  const [evEffInput, setEvEffInput] = useState<string>(
+    DEFAULT_EV_ASSUMPTIONS.evMilesPerKwh.toFixed(1)
   );
-  const [gasPricePerGallon, setGasPricePerGallon] = useState<number>(
-    profile.gasPricePerGallon
+  const [gasMpgInput, setGasMpgInput] = useState<string>(
+    String(DEFAULT_EV_ASSUMPTIONS.gasVehicleMpg)
   );
-  const [publicFastChargeDollarsPerKwh, setPublicFastChargeDollarsPerKwh] =
-    useState<number>(profile.publicFastChargePerKwh);
-  const [homeChargingSharePercent, setHomeChargingSharePercent] = useState<number>(85);
+  const [electricityInput, setElectricityInput] = useState<string>(
+    profile.electricityCentsPerKwh.toFixed(1)
+  );
+  const [gasPriceInput, setGasPriceInput] = useState<string>(
+    profile.gasPricePerGallon.toFixed(2)
+  );
+  const [publicRateInput, setPublicRateInput] = useState<string>(
+    profile.publicFastChargePerKwh.toFixed(2)
+  );
+  const [homeChargingSharePercent, setHomeChargingSharePercent] = useState<number>(
+    DEFAULT_EV_ASSUMPTIONS.homeChargingSharePercent
+  );
+
+  const evMilesPerKwh = parseInputNumber(
+    evEffInput,
+    DEFAULT_EV_ASSUMPTIONS.evMilesPerKwh,
+    0.5,
+    8.0
+  );
+  const gasVehicleMpg = parseInputNumber(
+    gasMpgInput,
+    DEFAULT_EV_ASSUMPTIONS.gasVehicleMpg,
+    5,
+    100
+  );
+  const electricityCentsPerKwh = parseInputNumber(electricityInput, 0, 0, 100);
+  const gasPricePerGallon = parseInputNumber(gasPriceInput, 0, 0, 15);
+  const publicFastChargeDollarsPerKwh = parseInputNumber(publicRateInput, 0, 0, 3);
 
   const results = useMemo(
     () =>
@@ -32,7 +69,7 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
         gasPricePerGallon,
         publicFastChargeDollarsPerKwh,
         homeChargingSharePercent,
-        chargingEfficiencyPercent: 90,
+        chargingEfficiencyPercent: DEFAULT_EV_ASSUMPTIONS.chargingEfficiencyPercent,
       }),
     [
       annualMiles,
@@ -52,14 +89,19 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
     1
   );
 
+  const stateAvgRateStr = profile.electricityCentsPerKwh.toFixed(1);
+  const offPeakRateStr = (profile.electricityCentsPerKwh * 0.7).toFixed(1);
+  const isStateAvgSelected = electricityInput.trim() === stateAvgRateStr;
+  const isOffPeakSelected = electricityInput.trim() === offPeakRateStr;
+
   const handleReset = () => {
-    setAnnualMiles(13500);
-    setEvMilesPerKwh(3.4);
-    setGasVehicleMpg(28);
-    setElectricityCentsPerKwh(profile.electricityCentsPerKwh);
-    setGasPricePerGallon(profile.gasPricePerGallon);
-    setPublicFastChargeDollarsPerKwh(profile.publicFastChargePerKwh);
-    setHomeChargingSharePercent(85);
+    setAnnualMiles(DEFAULT_EV_ASSUMPTIONS.annualMiles);
+    setEvEffInput(DEFAULT_EV_ASSUMPTIONS.evMilesPerKwh.toFixed(1));
+    setGasMpgInput(String(DEFAULT_EV_ASSUMPTIONS.gasVehicleMpg));
+    setElectricityInput(profile.electricityCentsPerKwh.toFixed(1));
+    setGasPriceInput(profile.gasPricePerGallon.toFixed(2));
+    setPublicRateInput(profile.publicFastChargePerKwh.toFixed(2));
+    setHomeChargingSharePercent(DEFAULT_EV_ASSUMPTIONS.homeChargingSharePercent);
   };
 
   const isSavingMoney = results.annualSavingsVsGas >= 0;
@@ -75,7 +117,8 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
             Interactive EV Charging Cost Calculator — {profile.name}
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Pre-filled with {profile.name} residential utility and gasoline defaults. Adjust sliders to match your car and tariff.
+            Pre-filled with {profile.name} residential utility and gasoline defaults. Pick a
+            vehicle preset or enter your own utility rate.
           </p>
         </div>
         <button
@@ -120,13 +163,43 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
               <input
                 id="electricityRate"
                 type="number"
+                inputMode="decimal"
                 min={1}
-                max={80}
+                max={100}
                 step={0.1}
-                value={electricityCentsPerKwh}
-                onChange={(e) => setElectricityCentsPerKwh(Number(e.target.value) || 0)}
+                value={electricityInput}
+                onChange={(e) => setElectricityInput(e.target.value)}
+                onBlur={() => {
+                  if (electricityInput.trim() === "") {
+                    setElectricityInput(stateAvgRateStr);
+                  }
+                }}
                 className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
               />
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setElectricityInput(stateAvgRateStr)}
+                  className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                    isStateAvgSelected
+                      ? "bg-emerald-600 text-white"
+                      : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  {profile.abbr} Avg ({stateAvgRateStr}¢)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setElectricityInput(offPeakRateStr)}
+                  className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                    isOffPeakSelected
+                      ? "bg-emerald-600 text-white"
+                      : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  Est. Off-Peak TOU ({offPeakRateStr}¢)
+                </button>
+              </div>
             </div>
 
             <div>
@@ -139,13 +212,22 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
               <input
                 id="gasPrice"
                 type="number"
+                inputMode="decimal"
                 min={1}
-                max={10}
+                max={15}
                 step={0.05}
-                value={gasPricePerGallon}
-                onChange={(e) => setGasPricePerGallon(Number(e.target.value) || 0)}
+                value={gasPriceInput}
+                onChange={(e) => setGasPriceInput(e.target.value)}
+                onBlur={() => {
+                  if (gasPriceInput.trim() === "") {
+                    setGasPriceInput(profile.gasPricePerGallon.toFixed(2));
+                  }
+                }}
                 className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
               />
+              <p className="mt-2 text-[11px] text-slate-500">
+                {profile.abbr} regular-grade baseline: ${profile.gasPricePerGallon.toFixed(2)}/gal
+              </p>
             </div>
           </div>
 
@@ -160,16 +242,38 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
               <input
                 id="evEff"
                 type="number"
-                min={1.2}
-                max={6.0}
+                inputMode="decimal"
+                min={0.5}
+                max={8.0}
                 step={0.1}
-                value={evMilesPerKwh}
-                onChange={(e) => setEvMilesPerKwh(Number(e.target.value) || 1.2)}
+                value={evEffInput}
+                onChange={(e) => setEvEffInput(e.target.value)}
+                onBlur={() => {
+                  if (evEffInput.trim() === "") {
+                    setEvEffInput(DEFAULT_EV_ASSUMPTIONS.evMilesPerKwh.toFixed(1));
+                  }
+                }}
                 className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
               />
-              <p className="mt-1 text-xs text-slate-500">
-                Typical sedan: 3.4–4.0 | SUV/Truck: 2.2–3.1
-              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {EV_PRESETS.map((preset) => {
+                  const active = Math.abs(evMilesPerKwh - preset.efficiency) < 0.05;
+                  return (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => setEvEffInput(preset.efficiency.toFixed(1))}
+                      className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                        active
+                          ? "bg-emerald-600 text-white"
+                          : "border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      {preset.label} ({preset.efficiency})
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div>
@@ -182,16 +286,38 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
               <input
                 id="gasMpg"
                 type="number"
-                min={10}
-                max={65}
+                inputMode="numeric"
+                min={5}
+                max={100}
                 step={1}
-                value={gasVehicleMpg}
-                onChange={(e) => setGasVehicleMpg(Number(e.target.value) || 10)}
+                value={gasMpgInput}
+                onChange={(e) => setGasMpgInput(e.target.value)}
+                onBlur={() => {
+                  if (gasMpgInput.trim() === "") {
+                    setGasMpgInput(String(DEFAULT_EV_ASSUMPTIONS.gasVehicleMpg));
+                  }
+                }}
                 className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
               />
-              <p className="mt-1 text-xs text-slate-500">
-                US light-duty fleet average ~26–30 MPG
-              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {GAS_PRESETS.map((preset) => {
+                  const active = Math.round(gasVehicleMpg) === preset.efficiency;
+                  return (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => setGasMpgInput(String(preset.efficiency))}
+                      className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                        active
+                          ? "bg-slate-800 text-white"
+                          : "border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      {preset.label} ({preset.efficiency})
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -224,20 +350,24 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
             <input
               id="publicRate"
               type="number"
-              min={0.1}
-              max={1.5}
+              inputMode="decimal"
+              min={0.05}
+              max={3.0}
               step={0.02}
-              value={publicFastChargeDollarsPerKwh}
-              onChange={(e) =>
-                setPublicFastChargeDollarsPerKwh(Number(e.target.value) || 0)
-              }
+              value={publicRateInput}
+              onChange={(e) => setPublicRateInput(e.target.value)}
+              onBlur={() => {
+                if (publicRateInput.trim() === "") {
+                  setPublicRateInput(profile.publicFastChargePerKwh.toFixed(2));
+                }
+              }}
               className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
             />
           </div>
         </div>
 
         {/* Results */}
-        <div className="flex flex-col justify-between gap-5 lg:col-span-6">
+        <div className="flex flex-col justify-between gap-4 lg:col-span-6">
           <div
             className={`rounded-xl border p-5 ${
               isSavingMoney
@@ -267,8 +397,36 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
             </p>
           </div>
 
+          {/* Monthly Snapshot */}
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-[11px] font-medium text-slate-500">Monthly EV (Mix)</p>
+              <p className="mt-1 text-base font-bold text-slate-900">
+                {formatUsd(results.monthlyBlendedEvCost)}/mo
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-[11px] font-medium text-slate-500">Monthly Gas</p>
+              <p className="mt-1 text-base font-bold text-slate-900">
+                {formatUsd(results.monthlyGasCost)}/mo
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-[11px] font-medium text-slate-500">Monthly Diff.</p>
+              <p
+                className={`mt-1 text-base font-bold ${
+                  results.monthlySavingsVsGas >= 0 ? "text-emerald-700" : "text-amber-700"
+                }`}
+              >
+                {results.monthlySavingsVsGas >= 0
+                  ? `+${formatUsd(results.monthlySavingsVsGas)}/mo`
+                  : `-${formatUsd(Math.abs(results.monthlySavingsVsGas))}/mo`}
+              </p>
+            </div>
+          </div>
+
           {/* Visual Bar Comparison */}
-          <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-5">
+          <div className="space-y-3.5 rounded-xl border border-slate-200 bg-slate-50 p-5">
             <h3 className="text-sm font-semibold text-slate-800">
               Annual Energy &amp; Fuel Cost Comparison
             </h3>
@@ -316,21 +474,27 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
           </div>
 
           {/* Unit Metrics */}
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
             <div className="rounded-xl border border-slate-200 bg-white p-3">
-              <p className="text-xs text-slate-500">EV / 100 mi</p>
+              <p className="text-[11px] text-slate-500">100% Home / 100 mi</p>
+              <p className="mt-1 text-base font-bold text-slate-900">
+                {formatUsd(results.costPer100MilesHome, 2)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-[11px] text-slate-500">Your Mix / 100 mi</p>
               <p className="mt-1 text-base font-bold text-slate-900">
                 {formatUsd(results.costPer100MilesEv, 2)}
               </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-3">
-              <p className="text-xs text-slate-500">Gas / 100 mi</p>
+              <p className="text-[11px] text-slate-500">Gas / 100 mi</p>
               <p className="mt-1 text-base font-bold text-slate-900">
                 {formatUsd(results.costPer100MilesGas, 2)}
               </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-3">
-              <p className="text-xs text-slate-500">eGallon Equiv.</p>
+              <p className="text-[11px] text-slate-500">eGallon Equiv.</p>
               <p className="mt-1 text-base font-bold text-emerald-700">
                 {formatUsd(results.equivalentGasPriceDollarsPerGallon, 2)}/gal
               </p>
@@ -338,7 +502,9 @@ export default function EvChargingCalculator({ profile }: EvChargingCalculatorPr
           </div>
 
           <p className="text-xs text-slate-500">
-            Includes a 10% Level 2 wall-to-battery charging loss factor ({Math.round(results.annualKwhConsumed).toLocaleString("en-US")} kWh/year total electricity draw).
+            Includes a 10% Level 2 wall-to-battery charging loss factor (
+            {Math.round(results.annualKwhConsumed).toLocaleString("en-US")} kWh/year total
+            electricity draw).
           </p>
         </div>
       </div>

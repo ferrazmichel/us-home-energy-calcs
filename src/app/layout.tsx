@@ -26,6 +26,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      {SITE_CONFIG.adsenseClient ? (
+        <head>
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE_CONFIG.adsenseClient}`}
+            crossOrigin="anonymous"
+          />
+        </head>
+      ) : null}
       <body className="min-h-screen flex flex-col">
         {SITE_CONFIG.gaMeasurementId ? (
           <>
@@ -57,14 +66,23 @@ export default function RootLayout({
             </Link>
 
             <nav className="flex items-center gap-5 text-sm font-medium text-slate-600">
-              <Link href="/#states" className="hover:text-emerald-700 transition-colors">
-                By State
+              <Link
+                href="/ev-charging-cost"
+                className="hover:text-emerald-700 transition-colors"
+              >
+                All States
               </Link>
-              <Link href="/methodology" className="hover:text-emerald-700 transition-colors">
+              <Link
+                href="/methodology"
+                className="hover:text-emerald-700 transition-colors"
+              >
                 Methodology
               </Link>
-              <Link href="/disclaimer" className="hover:text-emerald-700 transition-colors">
-                Disclaimer
+              <Link
+                href="/about"
+                className="hover:text-emerald-700 transition-colors"
+              >
+                About
               </Link>
             </nav>
           </div>
@@ -79,12 +97,19 @@ export default function RootLayout({
                 {SITE_CONFIG.name} — Transparent US Residential Energy Tools
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                Estimates based on US Energy Information Administration (EIA) baseline residential rates.
+                © 2026 {SITE_CONFIG.name}. Estimates based on US Energy Information
+                Administration (EIA) baseline residential rates.
               </p>
             </div>
             <div className="flex flex-wrap gap-5 text-xs font-medium text-slate-600">
+              <Link href="/ev-charging-cost" className="hover:text-emerald-700">
+                All States Comparison
+              </Link>
               <Link href="/methodology" className="hover:text-emerald-700">
                 Methodology &amp; Data
+              </Link>
+              <Link href="/about" className="hover:text-emerald-700">
+                About
               </Link>
               <Link href="/privacy-policy" className="hover:text-emerald-700">
                 Privacy Policy

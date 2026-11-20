@@ -4,24 +4,25 @@
 
 ---
 
-## Passo 1 — Instalar Node.js e Rodar o Projeto Localmente
+## Passo 1 — Revisar o Projeto Rodando Localmente *(Dependências e Build já Validados)*
 
-1. Instale o **Node.js 20 LTS** ([https://nodejs.org](https://nodejs.org)).
-2. No terminal, entre na pasta do repositório:
+> **Status atual:** `npm install`, `npm test`, `npm run typecheck`, `npm run lint` e `npm run build` já foram executados com sucesso neste Mac, gerando a pasta estática `out/` com **57 URLs** no `sitemap.xml` (home, tabela nacional dos 51 estados/DC, 51 páginas estaduais e páginas institucionais).
+
+1. No terminal, entre na pasta do repositório e inicie o servidor local de revisão:
    ```bash
    cd us-home-energy-calcs
-   npm install
    npm run dev
    ```
-3. Abra `http://localhost:3000` no navegador e teste:
-   - Página inicial (`/`) — mexa nos sliders da calculadora e clique em alguns estados no grid.
-   - Página de estado caro vs. barato: `/ev-charging-cost/california` vs. `/ev-charging-cost/washington` vs. `/ev-charging-cost/texas`.
-   - Páginas institucionais: `/methodology`, `/privacy-policy`, `/disclaimer`.
-4. Teste a geração estática de produção (garante que todas as 51 páginas compilam sem erro):
+2. Abra `http://localhost:3000` no navegador e teste:
+   - **Página inicial (`/`)** — teste os presets de veículos EV/gasolina, o botão de tarifa Off-Peak TOU, a busca/filtro por região no grid e o strip de destaques nacionais.
+   - **Comparativo nacional (`/ev-charging-cost`)** — confira os rankings Top 5 e a tabela completa com todos os 50 estados + D.C.
+   - **Páginas de estado caro vs. barato** — `/ev-charging-cost/california` vs. `/ev-charging-cost/washington` vs. `/ev-charging-cost/texas`, além do seletor rápido *Jump to state* e da tabela *Level 1 vs. Level 2*.
+   - **Páginas institucionais** — `/about`, `/methodology`, `/privacy-policy`, `/disclaimer`.
+3. Se fizer novos ajustes antes do deploy, valide novamente o pacote estático completo:
    ```bash
-   npm run build
+   npm test && npm run typecheck && npm run lint && npm run build
    ```
-   Se tudo passar, a pasta estática `out/` será gerada pronta para deploy gratuito em CDN.
+   Se tudo passar, a pasta estática `out/` estará pronta para deploy gratuito em CDN.
 
 ---
 

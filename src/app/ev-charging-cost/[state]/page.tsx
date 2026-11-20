@@ -2,15 +2,24 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import EvChargingCalculator from "@/components/EvChargingCalculator";
+import StateQuickSwitcher from "@/components/StateQuickSwitcher";
 import {
   DATA_METADATA,
+  getClimateEvNote,
   getRelatedStates,
   getStateBySlug,
   US_NATIONAL_AVERAGE,
   US_STATES_ENERGY,
 } from "@/data/usStatesEnergy";
-import { calculateEvChargingCosts, formatUsd } from "@/lib/calculators";
+import {
+  calculateChargingSessions,
+  calculateEvChargingCosts,
+  calculateFullChargeCost,
+  DEFAULT_EV_ASSUMPTIONS,
+  formatUsd,
+} from "@/lib/calculators";
 import { SITE_CONFIG } from "@/lib/siteConfig";
+import { getStateRankingBySlug } from "@/lib/stateRankings";
 
 type StatePageProps = {
   params: Promise<{ state: string }>;
@@ -32,17 +41,17 @@ export async function generateMetadata({ params }: StatePageProps): Promise<Meta
   }
 
   const baseline = calculateEvChargingCosts({
-    annualMiles: 13500,
-    evMilesPerKwh: 3.4,
-    gasVehicleMpg: 28,
+    annualMiles: DEFAULT_EV_ASSUMPTIONS.annualMiles,
+    evMilesPerKwh: DEFAULT_EV_ASSUMPTIONS.evMilesPerKwh,
+    gasVehicleMpg: DEFAULT_EV_ASSUMPTIONS.gasVehicleMpg,
     electricityCentsPerKwh: profile.electricityCentsPerKwh,
     gasPricePerGallon: profile.gasPricePerGallon,
     publicFastChargeDollarsPerKwh: profile.publicFastChargePerKwh,
-    homeChargingSharePercent: 85,
+    homeChargingSharePercent: DEFAULT_EV_ASSUMPTIONS.homeChargingSharePercent,
   });
 
   const title = `Cost to Charge an EV at Home in ${profile.name} (Calculator & Rates)`;
-  const description = `At ${profile.electricityCentsPerKwh.toFixed(1)}¢/kWh residential electricity and $${profile.gasPricePerGallon.toFixed(2)}/gal gas, charging an EV in ${profile.name} averages ${formatUsd(baseline.costPer100MilesEv, 2)} per 100 miles (${formatUsd(baseline.annualSavingsVsGas)}/yr savings vs. gas).`;
+  const description = `At ${profile.electricityCentsPerKwh.toFixed(1)}¢/kWh residential electricity and $${profile.gasPricePerGallon.toFixed(2)}/gal gas, home EV charging in ${profile.name} averages ${formatUsd(baseline.costPer100MilesHome, 2)} per 100 miles (${formatUsd(baseline.annualSavingsVsGas)}/yr estimated savings vs. gas).`;
 
   return {
     title,
@@ -67,29 +76,31 @@ export default async function StateEvChargingPage({ params }: StatePageProps) {
     notFound();
   }
 
+  const ranking = getStateRankingBySlug(profile.slug);
+
   const standardMiles = [10000, 13500, 20000];
   const scenarios = standardMiles.map((miles) => ({
     miles,
     ...calculateEvChargingCosts({
       annualMiles: miles,
-      evMilesPerKwh: 3.4,
-      gasVehicleMpg: 28,
+      evMilesPerKwh: DEFAULT_EV_ASSUMPTIONS.evMilesPerKwh,
+      gasVehicleMpg: DEFAULT_EV_ASSUMPTIONS.gasVehicleMpg,
       electricityCentsPerKwh: profile.electricityCentsPerKwh,
       gasPricePerGallon: profile.gasPricePerGallon,
       publicFastChargeDollarsPerKwh: profile.publicFastChargePerKwh,
-      homeChargingSharePercent: 85,
+      homeChargingSharePercent: DEFAULT_EV_ASSUMPTIONS.homeChargingSharePercent,
     }),
   }));
 
   const defaultScenario = scenarios[1];
   const usBenchmark = calculateEvChargingCosts({
-    annualMiles: 13500,
-    evMilesPerKwh: 3.4,
-    gasVehicleMpg: 28,
+    annualMiles: DEFAULT_EV_ASSUMPTIONS.annualMiles,
+    evMilesPerKwh: DEFAULT_EV_ASSUMPTIONS.evMilesPerKwh,
+    gasVehicleMpg: DEFAULT_EV_ASSUMPTIONS.gasVehicleMpg,
     electricityCentsPerKwh: US_NATIONAL_AVERAGE.electricityCentsPerKwh,
     gasPricePerGallon: US_NATIONAL_AVERAGE.gasPricePerGallon,
     publicFastChargeDollarsPerKwh: US_NATIONAL_AVERAGE.publicFastChargePerKwh,
-    homeChargingSharePercent: 85,
+    homeChargingSharePercent: DEFAULT_EV_ASSUMPTIONS.homeChargingSharePercent,
   });
 
   const rateDiffPct =
@@ -103,14 +114,26 @@ export default async function StateEvChargingPage({ params }: StatePageProps) {
       ? `${rateDiffPct.toFixed(0)}% above the US average`
       : `${Math.abs(rateDiffPct).toFixed(0)}% below the US average`;
 
-  const monthlyCostHome = defaultScenario.annualPureHomeEvCost / 12;
-  const costFull75Kwh = (75 * profile.electricityCentsPerKwh) / 100 / 0.9;
+  const costFull75Kwh = calculateFullChargeCost(
+    DEFAULT_EV_ASSUMPTIONS.batteryKwh,
+    profile.electricityCentsPerKwh,
+    DEFAULT_EV_ASSUMPTIONS.chargingEfficiencyPercent
+  );
+  const chargingSessions = calculateChargingSessions(
+    profile.electricityCentsPerKwh,
+    DEFAULT_EV_ASSUMPTIONS.chargingEfficiencyPercent
+  );
   const relatedStates = getRelatedStates(profile, 6);
+  const switcherStates = US_STATES_ENERGY.map((st) => ({
+    slug: st.slug,
+    name: st.name,
+    abbr: st.abbr,
+  }));
 
   const faqs = [
     {
       question: `How much does it cost to charge an EV at home in ${profile.name}?`,
-      answer: `Using ${profile.name}'s baseline residential rate of ${profile.electricityCentsPerKwh.toFixed(1)}¢/kWh (including 10% Level 2 charging losses), fueling a 3.4 mi/kWh EV costs roughly ${formatUsd(defaultScenario.costPer100MilesEv, 2)} per 100 miles, or about ${formatUsd(monthlyCostHome)}/month at 13,500 miles per year if charged entirely at home.`,
+      answer: `Using ${profile.name}'s baseline residential rate of ${profile.electricityCentsPerKwh.toFixed(1)}¢/kWh (including 10% Level 2 charging losses), fueling a 3.4 mi/kWh EV entirely at home costs roughly ${formatUsd(defaultScenario.costPer100MilesHome, 2)} per 100 miles, or about ${formatUsd(defaultScenario.monthlyPureHomeEvCost)}/month at 13,500 miles per year.`,
     },
     {
       question: `How much does a full 0–100% home charge cost in ${profile.name}?`,
@@ -135,28 +158,74 @@ export default async function StateEvChargingPage({ params }: StatePageProps) {
     })),
   };
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: `${SITE_CONFIG.url}/`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "EV Charging Cost by State",
+        item: `${SITE_CONFIG.url}/ev-charging-cost`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: profile.name,
+        item: `${SITE_CONFIG.url}/ev-charging-cost/${profile.slug}`,
+      },
+    ],
+  };
+
+  const defaultSavingsPositive = defaultScenario.annualSavingsVsGas >= 0;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
 
-      {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="mb-4 text-xs font-medium text-slate-500">
-        <Link href="/" className="hover:text-emerald-700">
-          Home
-        </Link>{" "}
-        <span className="mx-1">/</span>
-        <Link href="/#states" className="hover:text-emerald-700">
-          States
-        </Link>{" "}
-        <span className="mx-1">/</span>
-        <span className="text-slate-800">{profile.name}</span>
-      </nav>
+      {/* Breadcrumb + State Quick Switcher */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Breadcrumb" className="text-xs font-medium text-slate-500">
+          <Link href="/" className="hover:text-emerald-700">
+            Home
+          </Link>{" "}
+          <span className="mx-1">/</span>
+          <Link href="/ev-charging-cost" className="hover:text-emerald-700">
+            States
+          </Link>{" "}
+          <span className="mx-1">/</span>
+          <span className="text-slate-800">{profile.name}</span>
+        </nav>
+
+        <StateQuickSwitcher currentSlug={profile.slug} states={switcherStates} />
+      </div>
 
       {/* Header */}
       <header className="mb-8 max-w-4xl">
+        {ranking ? (
+          <div className="mb-3 flex flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+              #{ranking.electricityRank} of {ranking.totalStates} lowest residential electricity rate
+            </span>
+            <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+              #{ranking.savingsRank} of {ranking.totalStates} highest EV savings vs. gas
+            </span>
+          </div>
+        ) : null}
+
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
           Cost to Charge an EV at Home in {profile.name}
         </h1>
@@ -207,8 +276,12 @@ export default async function StateEvChargingPage({ params }: StatePageProps) {
 
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-medium text-slate-500">Est. Annual Savings (13.5k mi)</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-700">
-            {defaultScenario.annualSavingsVsGas >= 0
+          <p
+            className={`mt-1 text-2xl font-bold ${
+              defaultSavingsPositive ? "text-emerald-700" : "text-amber-700"
+            }`}
+          >
+            {defaultSavingsPositive
               ? formatUsd(defaultScenario.annualSavingsVsGas)
               : `-${formatUsd(Math.abs(defaultScenario.annualSavingsVsGas))}`}
           </p>
@@ -219,7 +292,7 @@ export default async function StateEvChargingPage({ params }: StatePageProps) {
       </section>
 
       {/* Interactive Calculator */}
-      <EvChargingCalculator profile={profile} />
+      <EvChargingCalculator key={profile.slug} profile={profile} />
 
       {/* Mileage Scenario Table */}
       <section className="mt-12 rounded-2xl border border-slate-200 bg-white p-6">
@@ -244,27 +317,34 @@ export default async function StateEvChargingPage({ params }: StatePageProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {scenarios.map((row) => (
-                <tr key={row.miles}>
-                  <td className="py-3 pr-4 font-semibold text-slate-900">
-                    {row.miles.toLocaleString("en-US")} mi/yr
-                  </td>
-                  <td className="py-3 pr-4 text-slate-700">
-                    {formatUsd(row.annualPureHomeEvCost)}
-                  </td>
-                  <td className="py-3 pr-4 text-slate-700">
-                    {formatUsd(row.annualBlendedEvCost)}
-                  </td>
-                  <td className="py-3 pr-4 text-slate-700">
-                    {formatUsd(row.annualGasCost)}
-                  </td>
-                  <td className="py-3 font-bold text-emerald-700">
-                    {row.annualSavingsVsGas >= 0
-                      ? `${formatUsd(row.annualSavingsVsGas)}/yr`
-                      : `-${formatUsd(Math.abs(row.annualSavingsVsGas))}/yr`}
-                  </td>
-                </tr>
-              ))}
+              {scenarios.map((row) => {
+                const rowPositive = row.annualSavingsVsGas >= 0;
+                return (
+                  <tr key={row.miles}>
+                    <td className="py-3 pr-4 font-semibold text-slate-900">
+                      {row.miles.toLocaleString("en-US")} mi/yr
+                    </td>
+                    <td className="py-3 pr-4 text-slate-700">
+                      {formatUsd(row.annualPureHomeEvCost)}
+                    </td>
+                    <td className="py-3 pr-4 text-slate-700">
+                      {formatUsd(row.annualBlendedEvCost)}
+                    </td>
+                    <td className="py-3 pr-4 text-slate-700">
+                      {formatUsd(row.annualGasCost)}
+                    </td>
+                    <td
+                      className={`py-3 font-bold ${
+                        rowPositive ? "text-emerald-700" : "text-amber-700"
+                      }`}
+                    >
+                      {rowPositive
+                        ? `${formatUsd(row.annualSavingsVsGas)}/yr`
+                        : `-${formatUsd(Math.abs(row.annualSavingsVsGas))}/yr`}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -275,6 +355,69 @@ export default async function StateEvChargingPage({ params }: StatePageProps) {
           </Link>
           .
         </p>
+      </section>
+
+      {/* Home Charging Time & Cost (Level 1 vs. Level 2) */}
+      <section className="mt-12 rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 className="text-xl font-bold text-slate-900">
+          Home Charging Time &amp; Cost in {profile.name} (Level 1 vs. Level 2)
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Estimated plug-in duration and electricity cost at{" "}
+          {profile.electricityCentsPerKwh.toFixed(1)}¢/kWh (including 10% charging loss) for
+          typical US daily driving (37 mi ≈ 10.9 battery kWh) and a 20%→80% recharge on a 75 kWh
+          battery pack (45 battery kWh).
+        </p>
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                <th className="py-3 pr-4">Home Charger Tier</th>
+                <th className="py-3 pr-4">Daily 37-Mi Top-Up Time</th>
+                <th className="py-3 pr-4">Daily Electricity Cost</th>
+                <th className="py-3 pr-4">20% → 80% Recharge Time</th>
+                <th className="py-3">20% → 80% Cost</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {chargingSessions.map((session) => (
+                <tr key={session.tier}>
+                  <td className="py-3 pr-4 font-semibold text-slate-900">{session.tier}</td>
+                  <td className="py-3 pr-4 text-slate-700">
+                    {session.dailyHours.toFixed(1)} hrs
+                  </td>
+                  <td className="py-3 pr-4 text-slate-700">
+                    {formatUsd(session.dailyCostUsd, 2)}
+                  </td>
+                  <td className="py-3 pr-4 text-slate-700">
+                    {session.topUpHours.toFixed(1)} hrs
+                  </td>
+                  <td className="py-3 font-semibold text-emerald-700">
+                    {formatUsd(session.topUpCostUsd, 2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Climate & Local Charging Insights */}
+      <section className="mt-12 rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 className="text-xl font-bold text-slate-900">
+          Climate &amp; Local Charging Insights for {profile.name}
+        </h2>
+        <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-600">
+          <p>{profile.usAvgComparisonNote}</p>
+          <p>{getClimateEvNote(profile.climateZone)}</p>
+          <p className="text-xs text-slate-500">
+            Note: Many local utilities in {profile.name} offer optional overnight Time-of-Use
+            (TOU) rates or managed-charging bill credits that lower home charging costs below the
+            statewide residential average. Check directly with your electric utility for current
+            tariff schedules and active local rebates.
+          </p>
+        </div>
       </section>
 
       {/* State FAQs */}
@@ -297,9 +440,17 @@ export default async function StateEvChargingPage({ params }: StatePageProps) {
 
       {/* Related Regional States */}
       <section className="mt-12">
-        <h2 className="text-lg font-bold text-slate-900">
-          Compare Nearby {profile.region} States
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold text-slate-900">
+            Compare Nearby {profile.region} States
+          </h2>
+          <Link
+            href="/ev-charging-cost"
+            className="text-xs font-semibold text-emerald-700 hover:underline"
+          >
+            View all 50 states + DC comparison →
+          </Link>
+        </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
           {relatedStates.map((item) => (
             <Link

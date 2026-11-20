@@ -15,10 +15,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
+      url: `${SITE_CONFIG.url}/ev-charging-cost`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
       url: `${SITE_CONFIG.url}/methodology`,
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.7,
+    },
+    {
+      url: `${SITE_CONFIG.url}/about`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.5,
     },
     {
       url: `${SITE_CONFIG.url}/privacy-policy`,

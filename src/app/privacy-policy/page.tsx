@@ -44,6 +44,22 @@ export default function PrivacyPolicyPage() {
             personalized advertising preferences via Google&apos;s Ads Settings.
           </p>
         </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-slate-900">4. Contact &amp; US Privacy Notice</h2>
+          <p className="mt-2">
+            Because we do not create user accounts or sell personal profiles, we do not store
+            calculator inputs on our servers. If you have questions about this Privacy Policy or
+            applicable US state privacy rights, contact us at{" "}
+            <a
+              href={`mailto:${SITE_CONFIG.contactEmail}`}
+              className="font-semibold text-emerald-700 underline"
+            >
+              {SITE_CONFIG.contactEmail}
+            </a>
+            .
+          </p>
+        </section>
       </div>
     </div>
   );
