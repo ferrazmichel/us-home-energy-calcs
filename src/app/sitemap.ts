@@ -27,6 +27,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.95,
     },
     {
+      url: `${SITE_CONFIG.url}/solar-payback`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
       url: `${SITE_CONFIG.url}/methodology`,
       lastModified: now,
       changeFrequency: "monthly",
@@ -66,5 +72,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  return [...staticRoutes, ...stateRoutes, ...heatPumpStateRoutes];
+  const solarStateRoutes: MetadataRoute.Sitemap = US_STATES_ENERGY.map((st) => ({
+    url: `${SITE_CONFIG.url}/solar-payback/${st.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.9,
+  }));
+
+  return [...staticRoutes, ...stateRoutes, ...heatPumpStateRoutes, ...solarStateRoutes];
 }

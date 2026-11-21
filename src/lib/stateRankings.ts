@@ -7,10 +7,13 @@ import {
   calculateEvChargingCosts,
   calculateFullChargeCost,
   calculateHeatPumpVsGasCosts,
+  calculateSolarPayback,
   DEFAULT_EV_ASSUMPTIONS,
   DEFAULT_HEAT_PUMP_ASSUMPTIONS,
+  DEFAULT_SOLAR_ASSUMPTIONS,
   type EvChargingResults,
   type HeatPumpResults,
+  type SolarPaybackResults,
 } from "@/lib/calculators";
 
 export interface StateRankedSummary {
@@ -168,6 +171,76 @@ export function getTopHeatPumpSavingsStates(limit = 5): StateHeatPumpRankedSumma
 export function getTopResistanceSavingsStates(limit = 5): StateHeatPumpRankedSummary[] {
   return [...ALL_STATES_HEAT_PUMP_RANKED]
     .sort((a, b) => a.resistanceSavingsRank - b.resistanceSavingsRank)
+    .slice(0, limit);
+}
+
+export interface StateSolarRankedSummary {
+  profile: StateEnergyProfile;
+  baseline: SolarPaybackResults;
+  paybackRank: number;
+  sunRank: number;
+  totalStates: number;
+}
+
+const solarBaseEntries = US_STATES_ENERGY.map((profile) => {
+  const baseline = calculateSolarPayback({
+    systemSizeKw: DEFAULT_SOLAR_ASSUMPTIONS.systemSizeKw,
+    electricityCentsPerKwh: profile.electricityCentsPerKwh,
+    peakSunHours: profile.peakSunHours,
+    monthlyElectricBillUsd: DEFAULT_SOLAR_ASSUMPTIONS.monthlyElectricBillUsd,
+    installCostPerWattUsd: DEFAULT_SOLAR_ASSUMPTIONS.installCostPerWattUsd,
+    incentivePercent: DEFAULT_SOLAR_ASSUMPTIONS.incentivePercent,
+    performanceRatio: DEFAULT_SOLAR_ASSUMPTIONS.performanceRatio,
+  });
+  return { profile, baseline };
+});
+
+const solarPaybackRankMap = new Map<string, number>();
+[...solarBaseEntries]
+  .sort(
+    (a, b) =>
+      a.baseline.simplePaybackYears - b.baseline.simplePaybackYears ||
+      a.profile.name.localeCompare(b.profile.name)
+  )
+  .forEach((entry, idx) => {
+    solarPaybackRankMap.set(entry.profile.slug, idx + 1);
+  });
+
+const solarSunRankMap = new Map<string, number>();
+[...solarBaseEntries]
+  .sort(
+    (a, b) =>
+      b.profile.peakSunHours - a.profile.peakSunHours ||
+      a.profile.name.localeCompare(b.profile.name)
+  )
+  .forEach((entry, idx) => {
+    solarSunRankMap.set(entry.profile.slug, idx + 1);
+  });
+
+export const ALL_STATES_SOLAR_RANKED: StateSolarRankedSummary[] = [...solarBaseEntries]
+  .sort((a, b) => a.profile.name.localeCompare(b.profile.name))
+  .map((entry) => ({
+    ...entry,
+    paybackRank: solarPaybackRankMap.get(entry.profile.slug) ?? totalStates,
+    sunRank: solarSunRankMap.get(entry.profile.slug) ?? totalStates,
+    totalStates,
+  }));
+
+export function getStateSolarRankingBySlug(
+  slug: string
+): StateSolarRankedSummary | undefined {
+  return ALL_STATES_SOLAR_RANKED.find((item) => item.profile.slug === slug);
+}
+
+export function getTopSolarPaybackStates(limit = 5): StateSolarRankedSummary[] {
+  return [...ALL_STATES_SOLAR_RANKED]
+    .sort((a, b) => a.paybackRank - b.paybackRank)
+    .slice(0, limit);
+}
+
+export function getHighestSunStates(limit = 5): StateSolarRankedSummary[] {
+  return [...ALL_STATES_SOLAR_RANKED]
+    .sort((a, b) => a.sunRank - b.sunRank)
     .slice(0, limit);
 }
 

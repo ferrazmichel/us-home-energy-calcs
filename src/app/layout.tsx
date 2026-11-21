@@ -97,6 +97,12 @@ export default function RootLayout({
                 Heat Pump vs. Gas
               </Link>
               <Link
+                href="/solar-payback"
+                className="hover:text-emerald-700 transition-colors"
+              >
+                Solar Payback
+              </Link>
+              <Link
                 href="/methodology"
                 className="hover:text-emerald-700 transition-colors"
               >
@@ -131,6 +137,9 @@ export default function RootLayout({
               </Link>
               <Link href="/heat-pump-vs-gas" className="hover:text-emerald-700">
                 Heat Pump vs. Gas
+              </Link>
+              <Link href="/solar-payback" className="hover:text-emerald-700">
+                Solar Payback
               </Link>
               <Link href="/methodology" className="hover:text-emerald-700">
                 Methodology &amp; Data

@@ -87,6 +87,25 @@ Break-Even HSPF2            = (100 × Electricity [$/kWh] × AFUE) / Gas [$/ther
 Break-Even Seasonal COP     = Break-Even HSPF2 / 3.412`}
           </pre>
         </section>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-xl font-bold text-slate-900">
+            5. Residential Solar Payback &amp; NREL Peak Sun-Hours Formula
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+            Solar generation combines system DC nameplate capacity (kW) with state average daily
+            peak sun-hours from NREL PVWatts benchmarks and an industry-standard{" "}
+            <strong>80% DC-to-AC performance ratio</strong>. Multi-year 25-year savings factor
+            in <strong>0.5%/yr panel degradation</strong> and{" "}
+            <strong>2.5%/yr retail electricity rate inflation</strong>:
+          </p>
+          <pre className="mt-4 overflow-x-auto rounded-xl bg-slate-900 p-4 text-xs text-slate-100">
+{`Year-1 Solar Output (kWh)    = System Size (kW) × Peak Sun Hours × 365 × 0.80
+Net Installed Cost ($)       = (System Size [kW] × 1,000 × $/Watt) × (1 - Incentive %)
+Simple Payback (Years)       = Net Installed Cost / (Year-1 Output × Retail Rate [$/kWh])
+25-Yr Solar LCOE (¢/kWh)     = (Net Installed Cost / 25-Yr Degraded kWh Total) × 100`}
+          </pre>
+        </section>
       </div>
     </div>
   );

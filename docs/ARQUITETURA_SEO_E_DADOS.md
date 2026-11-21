@@ -51,4 +51,4 @@ Toda página `/ev-charging-cost/[state]` já é gerada com elementos únicos e �
 | Criar script `scripts/fetch_eia_rates.py` para sincronização com EIA API v2 | IA | ✅ |
 | Rodar `fetch_eia_rates.py` com `EIA_API_KEY` real e atualizar `usStatesEnergy.ts` | Usuário + IA | ⬜ |
 | Implementar rotas `/heat-pump-vs-gas/[state]` (Fase 2) | IA | ✅ |
-| Implementar rotas `/solar-payback/[state]` com dados NREL PVWatts (Fase 3) | IA | ⬜ |
+| Implementar rotas `/solar-payback/[state]` com dados NREL PVWatts (Fase 3) | IA | ✅ |

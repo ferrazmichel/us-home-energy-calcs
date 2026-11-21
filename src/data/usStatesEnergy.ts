@@ -747,3 +747,15 @@ export function getClimateHeatPumpNote(zone: ClimateZone): string {
       return "Mixed-climate states offer ideal conditions for air-source heat pumps, maintaining high seasonal efficiency across mild shoulder months and moderate winter nights while delivering efficient summer dehumidification and cooling.";
   }
 }
+
+export function getClimateSolarNote(zone: ClimateZone): string {
+  switch (zone) {
+    case "cold":
+      return "Cool ambient temperatures actually improve photovoltaic cell voltage, helping offset shorter winter daylight hours. Snow typically slides cleanly off pitched south-facing panels, and spring/summer net metering credits help balance lower December solar output.";
+    case "hot":
+      return "High peak sun hours yield strong year-round solar generation, especially when matched with summer air-conditioning peaks and EV daytime charging. Verify your utility's net-billing export credit structure, as high-solar markets sometimes credit daytime exports below retail import rates.";
+    case "mixed":
+    default:
+      return "Moderate climates combine steady multi-season solar output with balanced cooling and shoulder-month loads. Standard roof pitches capture strong annual kWh per kW without excessive high-temperature thermal derating.";
+  }
+}

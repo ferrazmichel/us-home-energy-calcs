@@ -5,17 +5,22 @@ import {
   calculateEvChargingCosts,
   calculateFullChargeCost,
   calculateHeatPumpVsGasCosts,
+  calculateSolarPayback,
   DEFAULT_EV_ASSUMPTIONS,
   DEFAULT_HEAT_PUMP_ASSUMPTIONS,
+  DEFAULT_SOLAR_ASSUMPTIONS,
   EV_PRESETS,
   formatUsd,
   FURNACE_PRESETS,
   GAS_PRESETS,
   HEAT_PUMP_PRESETS,
+  SOLAR_INCENTIVE_PRESETS,
+  SOLAR_SIZE_PRESETS,
 } from "../src/lib/calculators.ts";
 import {
   getClimateEvNote,
   getClimateHeatPumpNote,
+  getClimateSolarNote,
   getDefaultHeatingMMBtu,
   getRelatedStates,
   getStateBySlug,
@@ -231,5 +236,66 @@ test("heat pump presets, climate defaults, and 51-state runs handle edge cases c
   assert.equal(zeroLoad.annualGasFurnaceCost, 0);
   assert.ok(Number.isFinite(zeroLoad.costPerMMBtuHeatPump) && zeroLoad.costPerMMBtuHeatPump > 0);
   assert.ok(Number.isFinite(zeroLoad.costPerMMBtuGas) && zeroLoad.costPerMMBtuGas > 0);
+});
+
+test("calculateSolarPayback computes accurate PV output, payback years, 25-year profit, and LCOE", () => {
+  const res = calculateSolarPayback({
+    systemSizeKw: DEFAULT_SOLAR_ASSUMPTIONS.systemSizeKw,
+    electricityCentsPerKwh: US_NATIONAL_AVERAGE.electricityCentsPerKwh,
+    peakSunHours: US_NATIONAL_AVERAGE.peakSunHours,
+    monthlyElectricBillUsd: DEFAULT_SOLAR_ASSUMPTIONS.monthlyElectricBillUsd,
+    installCostPerWattUsd: DEFAULT_SOLAR_ASSUMPTIONS.installCostPerWattUsd,
+    incentivePercent: 30,
+    performanceRatio: 0.8,
+  });
+
+  const expectedAnnualKwh = 8.0 * US_NATIONAL_AVERAGE.peakSunHours * 365 * 0.8;
+  const expectedGross = 8.0 * 1000 * 2.85;
+  const expectedNet = expectedGross * 0.7;
+  const expectedYear1Savings = expectedAnnualKwh * 0.164;
+  const expectedPayback = expectedNet / expectedYear1Savings;
+
+  assert.ok(Math.abs(res.annualProductionKwh - expectedAnnualKwh) < 1e-6);
+  assert.ok(Math.abs(res.grossSystemCostUsd - expectedGross) < 1e-6);
+  assert.ok(Math.abs(res.netSystemCostUsd - expectedNet) < 1e-6);
+  assert.ok(Math.abs(res.firstYearSavingsUsd - expectedYear1Savings) < 1e-6);
+  assert.ok(Math.abs(res.simplePaybackYears - expectedPayback) < 1e-6);
+  assert.ok(res.twentyFiveYearGrossSavingsUsd > res.firstYearSavingsUsd * 25);
+  assert.ok(res.twentyFiveYearNetProfitUsd > 0);
+  assert.ok(res.levelizedSolarCentsPerKwh > 0 && res.levelizedSolarCentsPerKwh < 16.4);
+});
+
+test("solar presets, climate notes, 51-state runs, and zero-kW edge case work cleanly", () => {
+  assert.ok(SOLAR_SIZE_PRESETS.length >= 3);
+  assert.ok(SOLAR_INCENTIVE_PRESETS.length >= 3);
+  assert.ok(getClimateSolarNote("cold").includes("voltage"));
+  assert.ok(getClimateSolarNote("hot").includes("peak sun"));
+  assert.ok(getClimateSolarNote("mixed").includes("Moderate"));
+
+  for (const state of US_STATES_ENERGY) {
+    const res = calculateSolarPayback({
+      systemSizeKw: DEFAULT_SOLAR_ASSUMPTIONS.systemSizeKw,
+      electricityCentsPerKwh: state.electricityCentsPerKwh,
+      peakSunHours: state.peakSunHours,
+      monthlyElectricBillUsd: DEFAULT_SOLAR_ASSUMPTIONS.monthlyElectricBillUsd,
+      installCostPerWattUsd: DEFAULT_SOLAR_ASSUMPTIONS.installCostPerWattUsd,
+      incentivePercent: DEFAULT_SOLAR_ASSUMPTIONS.incentivePercent,
+    });
+    assert.ok(Number.isFinite(res.annualProductionKwh) && res.annualProductionKwh > 0);
+    assert.ok(Number.isFinite(res.simplePaybackYears) && res.simplePaybackYears > 0);
+    assert.ok(Number.isFinite(res.twentyFiveYearNetProfitUsd));
+  }
+
+  const zeroSystem = calculateSolarPayback({
+    systemSizeKw: 0,
+    electricityCentsPerKwh: 16.4,
+    peakSunHours: 4.7,
+    monthlyElectricBillUsd: 180,
+    installCostPerWattUsd: 2.85,
+    incentivePercent: 0,
+  });
+  assert.equal(zeroSystem.annualProductionKwh, 0);
+  assert.equal(zeroSystem.simplePaybackYears, 0);
+  assert.equal(zeroSystem.levelizedSolarCentsPerKwh, 0);
 });
 

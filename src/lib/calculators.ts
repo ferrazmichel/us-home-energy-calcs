@@ -321,3 +321,125 @@ export function calculateHeatPumpVsGasCosts(inputs: HeatPumpInputs): HeatPumpRes
     breakEvenCop,
   };
 }
+
+export interface SolarPaybackInputs {
+  systemSizeKw: number;
+  electricityCentsPerKwh: number;
+  peakSunHours: number;
+  monthlyElectricBillUsd: number;
+  installCostPerWattUsd: number;
+  incentivePercent: number;
+  performanceRatio?: number;
+}
+
+export interface SolarPaybackResults {
+  systemSizeKw: number;
+  annualProductionKwh: number;
+  monthlyProductionKwh: number;
+  annualHouseholdUsageKwh: number;
+  billOffsetPercent: number;
+  grossSystemCostUsd: number;
+  incentiveAmountUsd: number;
+  netSystemCostUsd: number;
+  firstYearSavingsUsd: number;
+  monthlySavingsUsd: number;
+  simplePaybackYears: number;
+  twentyFiveYearProductionKwh: number;
+  twentyFiveYearGrossSavingsUsd: number;
+  twentyFiveYearNetProfitUsd: number;
+  levelizedSolarCentsPerKwh: number;
+}
+
+export const DEFAULT_SOLAR_ASSUMPTIONS = {
+  systemSizeKw: 8.0,
+  monthlyElectricBillUsd: 180,
+  installCostPerWattUsd: 2.85,
+  incentivePercent: 0,
+  performanceRatio: 0.8,
+  annualDegradationRate: 0.005,
+  annualUtilityInflationRate: 0.025,
+} as const;
+
+export const SOLAR_SIZE_PRESETS: readonly HvacPreset[] = [
+  { label: "6 kW Compact", value: 6.0 },
+  { label: "8 kW Typical Home", value: 8.0 },
+  { label: "10 kW Large / EV Home", value: 10.0 },
+];
+
+export const SOLAR_INCENTIVE_PRESETS: readonly HvacPreset[] = [
+  { label: "0% (Unsubsidized)", value: 0 },
+  { label: "15% State/Utility Rebate", value: 15 },
+  { label: "30% Tax Credit / Incentive", value: 30 },
+];
+
+/**
+ * Pure residential solar PV payback, 25-year net profit, and LCOE calculator.
+ * Uses NREL peak sun-hours * 365 * system kW * 0.80 performance ratio, factoring
+ * 0.5%/yr panel degradation and 2.5%/yr retail utility escalation over 25 years.
+ */
+export function calculateSolarPayback(inputs: SolarPaybackInputs): SolarPaybackResults {
+  const kw = clampFinite(inputs.systemSizeKw, 0, 50);
+  const elecDollars = clampFinite(inputs.electricityCentsPerKwh, 0) / 100;
+  const sunHours = clampFinite(inputs.peakSunHours, 1, 10);
+  const monthlyBill = clampFinite(inputs.monthlyElectricBillUsd, 0, 5000);
+  const costPerWatt = clampFinite(inputs.installCostPerWattUsd, 0.5, 10);
+  const incentivePct = clampFinite(inputs.incentivePercent, 0, 80) / 100;
+  const perfRatio = clampFinite(
+    inputs.performanceRatio ?? DEFAULT_SOLAR_ASSUMPTIONS.performanceRatio,
+    0.5,
+    0.95
+  );
+
+  const annualProductionKwh = kw * sunHours * 365 * perfRatio;
+  const monthlyProductionKwh = annualProductionKwh / 12;
+
+  const annualHouseholdUsageKwh = elecDollars > 0 ? (monthlyBill * 12) / elecDollars : 0;
+  const billOffsetPercent =
+    annualHouseholdUsageKwh > 0
+      ? Math.min(100, (annualProductionKwh / annualHouseholdUsageKwh) * 100)
+      : 0;
+
+  const grossSystemCostUsd = kw * 1000 * costPerWatt;
+  const incentiveAmountUsd = grossSystemCostUsd * incentivePct;
+  const netSystemCostUsd = grossSystemCostUsd - incentiveAmountUsd;
+
+  const firstYearSavingsUsd = annualProductionKwh * elecDollars;
+  const monthlySavingsUsd = firstYearSavingsUsd / 12;
+  const simplePaybackYears =
+    firstYearSavingsUsd > 0 ? netSystemCostUsd / firstYearSavingsUsd : 0;
+
+  let twentyFiveYearProductionKwh = 0;
+  let twentyFiveYearGrossSavingsUsd = 0;
+  for (let year = 0; year < 25; year++) {
+    const yearKwh =
+      annualProductionKwh * Math.pow(1 - DEFAULT_SOLAR_ASSUMPTIONS.annualDegradationRate, year);
+    const yearRate =
+      elecDollars * Math.pow(1 + DEFAULT_SOLAR_ASSUMPTIONS.annualUtilityInflationRate, year);
+    twentyFiveYearProductionKwh += yearKwh;
+    twentyFiveYearGrossSavingsUsd += yearKwh * yearRate;
+  }
+
+  const twentyFiveYearNetProfitUsd = twentyFiveYearGrossSavingsUsd - netSystemCostUsd;
+  const levelizedSolarCentsPerKwh =
+    twentyFiveYearProductionKwh > 0
+      ? (netSystemCostUsd / twentyFiveYearProductionKwh) * 100
+      : 0;
+
+  return {
+    systemSizeKw: kw,
+    annualProductionKwh,
+    monthlyProductionKwh,
+    annualHouseholdUsageKwh,
+    billOffsetPercent,
+    grossSystemCostUsd,
+    incentiveAmountUsd,
+    netSystemCostUsd,
+    firstYearSavingsUsd,
+    monthlySavingsUsd,
+    simplePaybackYears,
+    twentyFiveYearProductionKwh,
+    twentyFiveYearGrossSavingsUsd,
+    twentyFiveYearNetProfitUsd,
+    levelizedSolarCentsPerKwh,
+  };
+}

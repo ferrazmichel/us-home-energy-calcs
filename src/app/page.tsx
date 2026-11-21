@@ -155,9 +155,12 @@ export default function HomePage() {
           </p>
         </Link>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Phase 3 Roadmap
+        <Link
+          href="/solar-payback"
+          className="rounded-xl border border-emerald-200 bg-white p-5 shadow-sm transition-all hover:border-emerald-500"
+        >
+          <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+            Live Now · 51 States
           </span>
           <h2 className="mt-1 text-lg font-bold text-slate-900">
             Residential Solar Payback
@@ -166,7 +169,7 @@ export default function HomePage() {
             State net-billing economics and solar irradiance modeling powered by NREL PVWatts
             benchmarks.
           </p>
-        </div>
+        </Link>
       </section>
 
       {/* Browse All 50 States + DC */}
