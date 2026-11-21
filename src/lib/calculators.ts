@@ -205,3 +205,119 @@ export function formatUsd(amount: number, decimals = 0): string {
     maximumFractionDigits: decimals,
   }).format(amount);
 }
+
+export interface HeatPumpInputs {
+  annualHeatingMMBtu: number;
+  electricityCentsPerKwh: number;
+  naturalGasDollarsPerTherm: number;
+  heatPumpHspf2: number;
+  furnaceAfuePercent: number;
+}
+
+export interface HeatPumpResults {
+  annualHeatingMMBtu: number;
+  heatPumpKwhConsumed: number;
+  heatPumpSeasonalCop: number;
+  annualHeatPumpCost: number;
+  gasThermsConsumed: number;
+  annualGasFurnaceCost: number;
+  electricResistanceKwh: number;
+  annualElectricResistanceCost: number;
+  annualSavingsVsGas: number;
+  fiveYearSavingsVsGas: number;
+  annualSavingsVsResistance: number;
+  fiveYearSavingsVsResistance: number;
+  costPerMMBtuHeatPump: number;
+  costPerMMBtuGas: number;
+  costPerMMBtuResistance: number;
+  winterMonthlyHeatPumpCost: number;
+  winterMonthlyGasCost: number;
+  breakEvenHspf2: number;
+  breakEvenCop: number;
+}
+
+export interface HvacPreset {
+  label: string;
+  value: number;
+}
+
+export const DEFAULT_HEAT_PUMP_ASSUMPTIONS = {
+  heatPumpHspf2: 9.5,
+  furnaceAfuePercent: 85,
+  referenceHomeSqFt: 2000,
+} as const;
+
+export const HEAT_PUMP_PRESETS: readonly HvacPreset[] = [
+  { label: "Standard Heat Pump (8.5 HSPF2)", value: 8.5 },
+  { label: "Cold-Climate ENERGY STAR (9.5 HSPF2)", value: 9.5 },
+  { label: "High-Efficiency Mini-Split (11.0 HSPF2)", value: 11.0 },
+];
+
+export const FURNACE_PRESETS: readonly HvacPreset[] = [
+  { label: "Standard 80% AFUE", value: 80 },
+  { label: "Mid-Efficiency 85% AFUE", value: 85 },
+  { label: "Condensing 95% AFUE", value: 95 },
+];
+
+/**
+ * Pure Heat Pump vs. Natural Gas Furnace & Electric Resistance heating operating cost engine.
+ * 1 therm = 100,000 BTU; 1 kWh = 3,412 BTU; COP = HSPF2 / 3.412.
+ */
+export function calculateHeatPumpVsGasCosts(inputs: HeatPumpInputs): HeatPumpResults {
+  const mmbtu = clampFinite(inputs.annualHeatingMMBtu, 0, 300);
+  const totalBtu = mmbtu * 1_000_000;
+  const elecDollars = clampFinite(inputs.electricityCentsPerKwh, 0) / 100;
+  const gasThermDollars = clampFinite(inputs.naturalGasDollarsPerTherm, 0.01);
+  const hspf2 = clampFinite(inputs.heatPumpHspf2, 3.412, 20);
+  const afue = clampFinite(inputs.furnaceAfuePercent, 50, 100) / 100;
+
+  const heatPumpKwhConsumed = totalBtu / (hspf2 * 1000);
+  const heatPumpSeasonalCop = hspf2 / 3.412;
+  const annualHeatPumpCost = heatPumpKwhConsumed * elecDollars;
+
+  const gasThermsConsumed = totalBtu / afue / 100_000;
+  const annualGasFurnaceCost = gasThermsConsumed * gasThermDollars;
+
+  const electricResistanceKwh = totalBtu / 3412;
+  const annualElectricResistanceCost = electricResistanceKwh * elecDollars;
+
+  const annualSavingsVsGas = annualGasFurnaceCost - annualHeatPumpCost;
+  const fiveYearSavingsVsGas = annualSavingsVsGas * 5;
+  const annualSavingsVsResistance = annualElectricResistanceCost - annualHeatPumpCost;
+  const fiveYearSavingsVsResistance = annualSavingsVsResistance * 5;
+
+  const costPerMMBtuHeatPump =
+    mmbtu > 0 ? annualHeatPumpCost / mmbtu : (1000 / hspf2) * elecDollars;
+  const costPerMMBtuGas =
+    mmbtu > 0 ? annualGasFurnaceCost / mmbtu : (10 / afue) * gasThermDollars;
+  const costPerMMBtuResistance =
+    mmbtu > 0 ? annualElectricResistanceCost / mmbtu : (1_000_000 / 3412) * elecDollars;
+
+  const winterMonthlyHeatPumpCost = annualHeatPumpCost / 5;
+  const winterMonthlyGasCost = annualGasFurnaceCost / 5;
+
+  const breakEvenHspf2 = (100 * elecDollars * afue) / gasThermDollars;
+  const breakEvenCop = breakEvenHspf2 / 3.412;
+
+  return {
+    annualHeatingMMBtu: mmbtu,
+    heatPumpKwhConsumed,
+    heatPumpSeasonalCop,
+    annualHeatPumpCost,
+    gasThermsConsumed,
+    annualGasFurnaceCost,
+    electricResistanceKwh,
+    annualElectricResistanceCost,
+    annualSavingsVsGas,
+    fiveYearSavingsVsGas,
+    annualSavingsVsResistance,
+    fiveYearSavingsVsResistance,
+    costPerMMBtuHeatPump,
+    costPerMMBtuGas,
+    costPerMMBtuResistance,
+    winterMonthlyHeatPumpCost,
+    winterMonthlyGasCost,
+    breakEvenHspf2,
+    breakEvenCop,
+  };
+}

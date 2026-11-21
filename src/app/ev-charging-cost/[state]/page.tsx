@@ -420,6 +420,29 @@ export default async function StateEvChargingPage({ params }: StatePageProps) {
         </div>
       </section>
 
+      {/* Cross-link to Heat Pump vs. Gas Page */}
+      <section className="mt-10 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
+            More {profile.name} Energy Tools
+          </p>
+          <h2 className="mt-1 text-lg font-bold text-slate-900">
+            Comparing Heat Pump vs. Gas Furnace Costs in {profile.name}?
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            See whether a 9.5 HSPF2 heat pump beats ${profile.naturalGasPerTherm.toFixed(2)}
+            /therm natural gas at {profile.electricityCentsPerKwh.toFixed(1)}¢/kWh in your
+            climate zone.
+          </p>
+        </div>
+        <Link
+          href={`/heat-pump-vs-gas/${profile.slug}`}
+          className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
+        >
+          Open {profile.abbr} Heat Pump Calculator →
+        </Link>
+      </section>
+
       {/* State FAQs */}
       <section className="mt-12">
         <h2 className="text-xl font-bold text-slate-900">

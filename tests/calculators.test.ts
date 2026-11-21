@@ -4,13 +4,19 @@ import {
   calculateChargingSessions,
   calculateEvChargingCosts,
   calculateFullChargeCost,
+  calculateHeatPumpVsGasCosts,
   DEFAULT_EV_ASSUMPTIONS,
+  DEFAULT_HEAT_PUMP_ASSUMPTIONS,
   EV_PRESETS,
   formatUsd,
+  FURNACE_PRESETS,
   GAS_PRESETS,
+  HEAT_PUMP_PRESETS,
 } from "../src/lib/calculators.ts";
 import {
   getClimateEvNote,
+  getClimateHeatPumpNote,
+  getDefaultHeatingMMBtu,
   getRelatedStates,
   getStateBySlug,
   US_NATIONAL_AVERAGE,
@@ -157,5 +163,73 @@ test("calculateFullChargeCost, calculateChargingSessions, presets, and state hel
   assert.ok(getClimateEvNote("cold").includes("winter"));
   assert.ok(getClimateEvNote("hot").includes("solar"));
   assert.ok(getClimateEvNote("mixed").includes("Four-season"));
+});
+
+test("calculateHeatPumpVsGasCosts computes accurate energy, resistance savings, and break-even COP", () => {
+  const res = calculateHeatPumpVsGasCosts({
+    annualHeatingMMBtu: 38,
+    electricityCentsPerKwh: US_NATIONAL_AVERAGE.electricityCentsPerKwh,
+    naturalGasDollarsPerTherm: US_NATIONAL_AVERAGE.naturalGasPerTherm,
+    heatPumpHspf2: DEFAULT_HEAT_PUMP_ASSUMPTIONS.heatPumpHspf2,
+    furnaceAfuePercent: DEFAULT_HEAT_PUMP_ASSUMPTIONS.furnaceAfuePercent,
+  });
+
+  const expectedHpKwh = (38 * 1_000_000) / (9.5 * 1000);
+  const expectedHpCost = expectedHpKwh * 0.164;
+  const expectedTherms = (38 * 1_000_000) / 0.85 / 100_000;
+  const expectedGasCost = expectedTherms * 1.48;
+  const expectedResKwh = (38 * 1_000_000) / 3412;
+  const expectedResCost = expectedResKwh * 0.164;
+  const expectedBreakEvenHspf2 = (100 * 0.164 * 0.85) / 1.48;
+
+  assert.ok(Math.abs(res.heatPumpKwhConsumed - expectedHpKwh) < 1e-6);
+  assert.ok(Math.abs(res.annualHeatPumpCost - expectedHpCost) < 1e-6);
+  assert.ok(Math.abs(res.gasThermsConsumed - expectedTherms) < 1e-6);
+  assert.ok(Math.abs(res.annualGasFurnaceCost - expectedGasCost) < 1e-6);
+  assert.ok(Math.abs(res.annualElectricResistanceCost - expectedResCost) < 1e-6);
+  assert.ok(Math.abs(res.annualSavingsVsGas - (expectedGasCost - expectedHpCost)) < 1e-6);
+  assert.ok(Math.abs(res.annualSavingsVsResistance - (expectedResCost - expectedHpCost)) < 1e-6);
+  assert.ok(Math.abs(res.breakEvenHspf2 - expectedBreakEvenHspf2) < 1e-6);
+  assert.ok(Math.abs(res.breakEvenCop - expectedBreakEvenHspf2 / 3.412) < 1e-6);
+  assert.ok(res.annualSavingsVsResistance > 0);
+});
+
+test("heat pump presets, climate defaults, and 51-state runs handle edge cases cleanly", () => {
+  assert.equal(getDefaultHeatingMMBtu("cold"), 60);
+  assert.equal(getDefaultHeatingMMBtu("mixed"), 38);
+  assert.equal(getDefaultHeatingMMBtu("hot"), 18);
+
+  assert.ok(getClimateHeatPumpNote("cold").includes("COP"));
+  assert.ok(getClimateHeatPumpNote("hot").includes("SEER2"));
+  assert.ok(getClimateHeatPumpNote("mixed").includes("Mixed-climate"));
+
+  assert.ok(HEAT_PUMP_PRESETS.length >= 3);
+  assert.ok(FURNACE_PRESETS.length >= 3);
+
+  for (const state of US_STATES_ENERGY) {
+    const res = calculateHeatPumpVsGasCosts({
+      annualHeatingMMBtu: getDefaultHeatingMMBtu(state.climateZone),
+      electricityCentsPerKwh: state.electricityCentsPerKwh,
+      naturalGasDollarsPerTherm: state.naturalGasPerTherm,
+      heatPumpHspf2: DEFAULT_HEAT_PUMP_ASSUMPTIONS.heatPumpHspf2,
+      furnaceAfuePercent: DEFAULT_HEAT_PUMP_ASSUMPTIONS.furnaceAfuePercent,
+    });
+    assert.ok(Number.isFinite(res.annualHeatPumpCost) && res.annualHeatPumpCost > 0);
+    assert.ok(Number.isFinite(res.annualGasFurnaceCost) && res.annualGasFurnaceCost > 0);
+    assert.ok(res.annualSavingsVsResistance > 0);
+    assert.ok(Number.isFinite(res.breakEvenCop) && res.breakEvenCop > 0);
+  }
+
+  const zeroLoad = calculateHeatPumpVsGasCosts({
+    annualHeatingMMBtu: 0,
+    electricityCentsPerKwh: 16,
+    naturalGasDollarsPerTherm: 1.5,
+    heatPumpHspf2: 9.5,
+    furnaceAfuePercent: 85,
+  });
+  assert.equal(zeroLoad.annualHeatPumpCost, 0);
+  assert.equal(zeroLoad.annualGasFurnaceCost, 0);
+  assert.ok(Number.isFinite(zeroLoad.costPerMMBtuHeatPump) && zeroLoad.costPerMMBtuHeatPump > 0);
+  assert.ok(Number.isFinite(zeroLoad.costPerMMBtuGas) && zeroLoad.costPerMMBtuGas > 0);
 });
 

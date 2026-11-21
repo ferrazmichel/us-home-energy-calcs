@@ -723,3 +723,27 @@ export function getClimateEvNote(zone: ClimateZone): string {
       return "Four-season moderate temperatures keep real-world EV efficiency close to EPA ratings across most of the year, with modest winter heating losses offset by efficient spring and autumn commuting.";
   }
 }
+
+export function getDefaultHeatingMMBtu(zone: ClimateZone): number {
+  switch (zone) {
+    case "cold":
+      return 60;
+    case "hot":
+      return 18;
+    case "mixed":
+    default:
+      return 38;
+  }
+}
+
+export function getClimateHeatPumpNote(zone: ClimateZone): string {
+  switch (zone) {
+    case "cold":
+      return "Cold-climate inverter air-source heat pumps maintain efficient heat output well below freezing (down to 5°F or -15°F), though seasonal COP drops during extreme sub-zero snaps. Properly sizing equipment and air-sealing ductwork prevents expensive electric resistance backup strips from running excessively.";
+    case "hot":
+      return "Warm-climate states have mild heating loads where heat pumps operate near peak COP (3.2–4.0) all winter long. Upgrading to a modern heat pump simultaneously boosts summer cooling SEER2 efficiency without paying fixed monthly natural gas meter charges year-round.";
+    case "mixed":
+    default:
+      return "Mixed-climate states offer ideal conditions for air-source heat pumps, maintaining high seasonal efficiency across mild shoulder months and moderate winter nights while delivering efficient summer dehumidification and cooling.";
+  }
+}

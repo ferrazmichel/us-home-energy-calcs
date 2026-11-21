@@ -11,11 +11,13 @@ interface StateOption {
 interface StateQuickSwitcherProps {
   currentSlug: string;
   states: StateOption[];
+  basePath?: string;
 }
 
 export default function StateQuickSwitcher({
   currentSlug,
   states,
+  basePath = "/ev-charging-cost",
 }: StateQuickSwitcherProps) {
   const router = useRouter();
   const sorted = [...states].sort((a, b) => a.name.localeCompare(b.name));
@@ -34,7 +36,7 @@ export default function StateQuickSwitcher({
         onChange={(e) => {
           const nextSlug = e.target.value;
           if (nextSlug && nextSlug !== currentSlug) {
-            router.push(`/ev-charging-cost/${nextSlug}`);
+            router.push(`${basePath}/${nextSlug}`);
           }
         }}
         className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"

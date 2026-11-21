@@ -32,7 +32,7 @@ us-home-energy-calcs/
 | Fase | Vertical | URL Programática | Status |
 | :--- | :--- | :--- | :--- |
 | **Fase 1** | Custo de Recarga de Carro Elétrico em Casa vs. Gasolina (51 páginas + comparativo nacional) | `/ev-charging-cost` e `/ev-charging-cost/[state]` | Pronto e validado (`npm run build` -> `out/` com 57 URLs no `sitemap.xml`) |
-| **Fase 2** | Bomba de Calor vs. Aquecedor a Gás (51 páginas) | `/heat-pump-vs-gas/[state]` | Planejado |
+| **Fase 2** | Bomba de Calor vs. Aquecedor a Gás (51 páginas + comparativo nacional) | `/heat-pump-vs-gas` e `/heat-pump-vs-gas/[state]` | Pronto e validado (`npm run build` -> `out/` com 109 URLs no `sitemap.xml`) ✅ |
 | **Fase 3** | Payback de Energia Solar Residencial (51 páginas + NREL PVWatts) | `/solar-payback/[state]` | Planejado |
 
 ---

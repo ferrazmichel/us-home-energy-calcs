@@ -68,6 +68,25 @@ Gasoline Cost ($)            = (Annual Miles / Gas Vehicle MPG) × Gas Price ($/
             </li>
           </ul>
         </section>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-xl font-bold text-slate-900">
+            4. Heat Pump vs. Natural Gas Furnace Formula
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+            Residential heating fuels are standardized by delivered heat in{" "}
+            <strong>MMBtu</strong> (1 MMBtu = 1,000,000 BTU), where 1 therm of natural gas
+            equals 100,000 BTU and 1 kWh of electricity equals 3,412 BTU. Heat pump
+            efficiency is modeled via <strong>HSPF2</strong> (BTU/Wh), with seasonal COP =
+            HSPF2 / 3.412:
+          </p>
+          <pre className="mt-4 overflow-x-auto rounded-xl bg-slate-900 p-4 text-xs text-slate-100">
+{`Heat Pump Electricity (kWh) = Delivered Heating BTU / (HSPF2 × 1,000)
+Gas Furnace Fuel (therms)   = (Delivered Heating BTU / AFUE) / 100,000
+Break-Even HSPF2            = (100 × Electricity [$/kWh] × AFUE) / Gas [$/therm]
+Break-Even Seasonal COP     = Break-Even HSPF2 / 3.412`}
+          </pre>
+        </section>
       </div>
     </div>
   );

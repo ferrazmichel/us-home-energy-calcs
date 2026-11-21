@@ -70,7 +70,13 @@ export default function RootLayout({
                 href="/ev-charging-cost"
                 className="hover:text-emerald-700 transition-colors"
               >
-                All States
+                EV Charging
+              </Link>
+              <Link
+                href="/heat-pump-vs-gas"
+                className="hover:text-emerald-700 transition-colors"
+              >
+                Heat Pump vs. Gas
               </Link>
               <Link
                 href="/methodology"
@@ -103,7 +109,10 @@ export default function RootLayout({
             </div>
             <div className="flex flex-wrap gap-5 text-xs font-medium text-slate-600">
               <Link href="/ev-charging-cost" className="hover:text-emerald-700">
-                All States Comparison
+                EV Charging by State
+              </Link>
+              <Link href="/heat-pump-vs-gas" className="hover:text-emerald-700">
+                Heat Pump vs. Gas
               </Link>
               <Link href="/methodology" className="hover:text-emerald-700">
                 Methodology &amp; Data

@@ -121,11 +121,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Upcoming Tools Preview */}
+      {/* Tools Suite Overview */}
       <section className="mt-12 grid gap-5 md:grid-cols-3">
-        <div className="rounded-xl border border-emerald-200 bg-white p-5 shadow-sm">
+        <Link
+          href="/ev-charging-cost"
+          className="rounded-xl border border-emerald-200 bg-white p-5 shadow-sm transition-all hover:border-emerald-500"
+        >
           <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-            Live Now
+            Live Now · 51 States
           </span>
           <h2 className="mt-1 text-lg font-bold text-slate-900">
             EV Home Charging Cost by State
@@ -134,11 +137,14 @@ export default function HomePage() {
             State-specific residential ¢/kWh rates, gas comparisons, eGallon equivalent, and
             5-year fuel savings.
           </p>
-        </div>
+        </Link>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Phase 2 Roadmap
+        <Link
+          href="/heat-pump-vs-gas"
+          className="rounded-xl border border-emerald-200 bg-white p-5 shadow-sm transition-all hover:border-emerald-500"
+        >
+          <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+            Live Now · 51 States
           </span>
           <h2 className="mt-1 text-lg font-bold text-slate-900">
             Heat Pump vs. Gas Furnace
@@ -147,7 +153,7 @@ export default function HomePage() {
             Climate-zone heating operating cost comparison using residential electricity vs.
             natural gas per therm.
           </p>
-        </div>
+        </Link>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
