@@ -26,17 +26,35 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {SITE_CONFIG.adsenseClient ? (
+      {SITE_CONFIG.googleTagId || SITE_CONFIG.adsenseClient ? (
         <head>
-          <script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE_CONFIG.adsenseClient}`}
-            crossOrigin="anonymous"
-          />
+          {SITE_CONFIG.googleTagId ? (
+            <>
+              {/* eslint-disable-next-line @next/next/next-script-for-ga */}
+              <script
+                async
+                src={`https://www.googletagmanager.com/gtm.js?id=${SITE_CONFIG.googleTagId}`}
+              />
+              {/* eslint-disable-next-line @next/next/next-script-for-ga */}
+              <script
+                dangerouslySetInnerHTML={{
+                  __html:
+                    "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date());",
+                }}
+              />
+            </>
+          ) : null}
+          {SITE_CONFIG.adsenseClient ? (
+            <script
+              async
+              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE_CONFIG.adsenseClient}`}
+              crossOrigin="anonymous"
+            />
+          ) : null}
         </head>
       ) : null}
       <body className="min-h-screen flex flex-col">
-        {SITE_CONFIG.gaMeasurementId ? (
+        {!SITE_CONFIG.googleTagId && SITE_CONFIG.gaMeasurementId ? (
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${SITE_CONFIG.gaMeasurementId}`}

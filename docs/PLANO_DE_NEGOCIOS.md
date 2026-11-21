@@ -56,7 +56,7 @@
 | Atividade | Responsável | Status |
 | :--- | :--- | :--- |
 | Definir escada AdSense → Journey by Mediavine e camada de afiliados | IA | ✅ |
-| Publicar MVP com 51 páginas em domínio `.com` e iniciar contagem de 4 meses | Usuário | ⬜ |
-| Conectar GA4 + Google Search Console e acompanhar primeiras impressões EUA | Usuário + IA | ⬜ |
+| Publicar MVP com 51 páginas em domínio `.com` e iniciar contagem de 4 meses | Usuário | ✅ |
+| Conectar GA4 + Google Search Console e acompanhar primeiras impressões EUA | Usuário + IA | ✅ |
 | Aplicar ao Google AdSense após maturação inicial de conteúdo e tráfego | Usuário | ⬜ |
 | Aplicar ao Journey by Mediavine ao bater 5.000 sessões Tier-1 + 4 meses de domínio | Usuário | ⬜ |
