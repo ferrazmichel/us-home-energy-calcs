@@ -1,18 +1,21 @@
 """Fetch latest US state residential electricity prices from the official EIA API v2.
 
 Usage:
-    1. Register for a free API key at https://www.eia.gov/opendata/register.php
-    2. Set EIA_API_KEY in your shell or .env file.
-    3. Run:
-         python scripts/fetch_eia_rates.py
-    4. Review the output JSON in scripts/eia_latest_residential_rates.json and
-       update src/data/usStatesEnergy.ts accordingly.
+    1. Optional: Register for a free API key at https://www.eia.gov/opendata/register.php
+       and set EIA_API_KEY in your shell or .env file (falls back to DEMO_KEY).
+    2. Run to inspect JSON only:
+         python3 scripts/fetch_eia_rates.py
+    3. Or fetch and update src/data/usStatesEnergy.ts directly:
+         python3 scripts/fetch_eia_rates.py --apply
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
+import re
+import ssl
 import sys
 import urllib.error
 import urllib.parse
@@ -20,7 +23,10 @@ import urllib.request
 from pathlib import Path
 
 EIA_RETAIL_SALES_ENDPOINT = "https://api.eia.gov/v2/electricity/retail-sales/data/"
-OUTPUT_FILE = Path(__file__).resolve().parent / "eia_latest_residential_rates.json"
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+OUTPUT_FILE = SCRIPT_DIR / "eia_latest_residential_rates.json"
+TS_DATA_FILE = PROJECT_ROOT / "src" / "data" / "usStatesEnergy.ts"
 
 US_STATES_AND_DC = {
     "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA",
@@ -31,13 +37,23 @@ US_STATES_AND_DC = {
 }
 
 
-def load_api_key() -> str:
-    """Read EIA_API_KEY from environment or project .env file."""
+def build_ssl_context() -> ssl.SSLContext:
+    """Create SSL context using certifi CA bundle when available."""
+    try:
+        import certifi  # type: ignore import-not-found
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return ssl.create_default_context()
+
+
+def load_api_key() -> tuple[str, bool]:
+    """Read EIA_API_KEY from env or .env, falling back to DEMO_KEY."""
     env_key = os.getenv("EIA_API_KEY", "").strip()
     if env_key:
-        return env_key
+        return env_key, False
 
-    env_path = Path(__file__).resolve().parent.parent / ".env"
+    env_path = PROJECT_ROOT / ".env"
     if env_path.exists():
         for line in env_path.read_text(encoding="utf-8").splitlines():
             stripped = line.strip()
@@ -45,9 +61,11 @@ def load_api_key() -> str:
                 continue
             k, v = stripped.split("=", 1)
             if k.strip() == "EIA_API_KEY":
-                return v.strip().strip('"').strip("'")
+                cleaned = v.strip().strip('"').strip("'")
+                if cleaned:
+                    return cleaned, False
 
-    return ""
+    return "DEMO_KEY", True
 
 
 def fetch_latest_residential_rates(api_key: str) -> dict[str, dict[str, object]]:
@@ -65,7 +83,7 @@ def fetch_latest_residential_rates(api_key: str) -> dict[str, dict[str, object]]
     url = f"{EIA_RETAIL_SALES_ENDPOINT}?{urllib.parse.urlencode(params)}"
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
 
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=30, context=build_ssl_context()) as resp:
         payload = json.loads(resp.read().decode("utf-8"))
 
     rows = payload.get("response", {}).get("data", [])
@@ -90,14 +108,73 @@ def fetch_latest_residential_rates(api_key: str) -> dict[str, dict[str, object]]
     return latest_by_state
 
 
-def main() -> int:
-    api_key = load_api_key()
-    if not api_key:
-        print(
-            "Error: EIA_API_KEY not found. Register free at https://www.eia.gov/opendata/register.php",
-            file=sys.stderr,
+def apply_rates_to_typescript(
+    rates: dict[str, dict[str, object]], ts_path: Path = TS_DATA_FILE
+) -> tuple[int, str]:
+    """Update electricityCentsPerKwh and DATA_METADATA in src/data/usStatesEnergy.ts."""
+    expected_codes = US_STATES_AND_DC | {"US"}
+    missing = sorted(expected_codes - set(rates.keys()))
+    if missing:
+        raise ValueError(f"Missing EIA rates for: {', '.join(missing)}")
+
+    latest_period = str(rates["US"].get("period") or max(str(v["period"]) for v in rates.values()))
+    content = ts_path.read_text(encoding="utf-8")
+
+    content, meta_label_subs = re.subn(
+        r'(sourceLabel:\s*)"[^"]+"',
+        rf'\1"U.S. EIA Official Retail Electricity Data ({latest_period}) & DOE/AFDC Benchmarks"',
+        content,
+        count=1,
+    )
+    content, meta_ver_subs = re.subn(
+        r'(baselineVersion:\s*)"[^"]+"',
+        rf'\1"{latest_period}-EIA-v2"',
+        content,
+        count=1,
+    )
+    if meta_label_subs != 1 or meta_ver_subs != 1:
+        raise RuntimeError("Could not update DATA_METADATA fields in usStatesEnergy.ts")
+
+    updated_codes: set[str] = set()
+
+    def replace_rate(match: re.Match[str]) -> str:
+        prefix, abbr, _old_val, suffix = match.groups()
+        if abbr not in rates:
+            return match.group(0)
+        new_rate = round(float(rates[abbr]["cents_per_kwh"]), 2)
+        updated_codes.add(abbr)
+        return f"{prefix}{new_rate}{suffix}"
+
+    pattern = re.compile(
+        r'(abbr:\s*"([A-Z]{2})",[^}]*?electricityCentsPerKwh:\s*)([0-9.]+)(,)',
+        re.DOTALL,
+    )
+    content = pattern.sub(replace_rate, content)
+
+    if updated_codes != expected_codes:
+        still_missing = sorted(expected_codes - updated_codes)
+        raise RuntimeError(
+            f"Expected 52 updates in usStatesEnergy.ts, got {len(updated_codes)}. Missing: {still_missing}"
         )
-        return 1
+
+    ts_path.write_text(content, encoding="utf-8")
+    return len(updated_codes), latest_period
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Fetch latest residential electricity rates from U.S. EIA API v2."
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Also patch src/data/usStatesEnergy.ts with the fetched rates.",
+    )
+    args = parser.parse_args()
+
+    api_key, is_demo = load_api_key()
+    if is_demo:
+        print("Notice: EIA_API_KEY not set; using api.data.gov DEMO_KEY.")
 
     try:
         rates = fetch_latest_residential_rates(api_key)
@@ -114,6 +191,15 @@ def main() -> int:
         encoding="utf-8",
     )
     print(f"Saved {len(rates)} state/national residential rate records to {OUTPUT_FILE}")
+
+    if args.apply:
+        try:
+            updated_count, period = apply_rates_to_typescript(rates)
+        except (RuntimeError, ValueError) as exc:
+            print(f"Error updating {TS_DATA_FILE}: {exc}", file=sys.stderr)
+            return 1
+        print(f"Updated {updated_count} profiles in {TS_DATA_FILE} (EIA period: {period})")
+
     return 0
 
 

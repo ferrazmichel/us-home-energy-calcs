@@ -64,8 +64,9 @@ test("calculateEvChargingCosts computes accurate 90%-efficiency home vs blended 
     chargingEfficiencyPercent: 90,
   });
 
+  const nationalRateDollarsPerKwh = US_NATIONAL_AVERAGE.electricityCentsPerKwh / 100;
   const expectedKwh = 13500 / 3.4 / 0.9;
-  const expectedPureHome = expectedKwh * 0.164;
+  const expectedPureHome = expectedKwh * nationalRateDollarsPerKwh;
   const expectedPurePublic = expectedKwh * 0.44;
   const expectedBlended = expectedPureHome * 0.85 + expectedPurePublic * 0.15;
   const expectedGas = (13500 / 28) * 3.25;
@@ -179,13 +180,15 @@ test("calculateHeatPumpVsGasCosts computes accurate energy, resistance savings, 
     furnaceAfuePercent: DEFAULT_HEAT_PUMP_ASSUMPTIONS.furnaceAfuePercent,
   });
 
+  const nationalRateDollarsPerKwh = US_NATIONAL_AVERAGE.electricityCentsPerKwh / 100;
   const expectedHpKwh = (38 * 1_000_000) / (9.5 * 1000);
-  const expectedHpCost = expectedHpKwh * 0.164;
+  const expectedHpCost = expectedHpKwh * nationalRateDollarsPerKwh;
   const expectedTherms = (38 * 1_000_000) / 0.85 / 100_000;
-  const expectedGasCost = expectedTherms * 1.48;
+  const expectedGasCost = expectedTherms * US_NATIONAL_AVERAGE.naturalGasPerTherm;
   const expectedResKwh = (38 * 1_000_000) / 3412;
-  const expectedResCost = expectedResKwh * 0.164;
-  const expectedBreakEvenHspf2 = (100 * 0.164 * 0.85) / 1.48;
+  const expectedResCost = expectedResKwh * nationalRateDollarsPerKwh;
+  const expectedBreakEvenHspf2 =
+    (100 * nationalRateDollarsPerKwh * 0.85) / US_NATIONAL_AVERAGE.naturalGasPerTherm;
 
   assert.ok(Math.abs(res.heatPumpKwhConsumed - expectedHpKwh) < 1e-6);
   assert.ok(Math.abs(res.annualHeatPumpCost - expectedHpCost) < 1e-6);
@@ -252,7 +255,8 @@ test("calculateSolarPayback computes accurate PV output, payback years, 25-year 
   const expectedAnnualKwh = 8.0 * US_NATIONAL_AVERAGE.peakSunHours * 365 * 0.8;
   const expectedGross = 8.0 * 1000 * 2.85;
   const expectedNet = expectedGross * 0.7;
-  const expectedYear1Savings = expectedAnnualKwh * 0.164;
+  const nationalRateCents = US_NATIONAL_AVERAGE.electricityCentsPerKwh;
+  const expectedYear1Savings = expectedAnnualKwh * (nationalRateCents / 100);
   const expectedPayback = expectedNet / expectedYear1Savings;
 
   assert.ok(Math.abs(res.annualProductionKwh - expectedAnnualKwh) < 1e-6);
@@ -262,7 +266,7 @@ test("calculateSolarPayback computes accurate PV output, payback years, 25-year 
   assert.ok(Math.abs(res.simplePaybackYears - expectedPayback) < 1e-6);
   assert.ok(res.twentyFiveYearGrossSavingsUsd > res.firstYearSavingsUsd * 25);
   assert.ok(res.twentyFiveYearNetProfitUsd > 0);
-  assert.ok(res.levelizedSolarCentsPerKwh > 0 && res.levelizedSolarCentsPerKwh < 16.4);
+  assert.ok(res.levelizedSolarCentsPerKwh > 0 && res.levelizedSolarCentsPerKwh < nationalRateCents);
 });
 
 test("solar presets, climate notes, 51-state runs, and zero-kW edge case work cleanly", () => {

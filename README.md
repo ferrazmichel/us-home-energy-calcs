@@ -66,7 +66,7 @@ npm run build     # Gera exportação estática na pasta out/
 | Implementar hub Next.js (Static Export) com 51 páginas `/ev-charging-cost/[state]`, comparativo nacional e legais | IA | ✅ |
 | Subir repositório para o GitHub pessoal (`ferrazmichel/us-home-energy-calcs`) | Usuário | ✅ |
 | Rodar `npm install`, testes, lint, typecheck e `npm run build` (`out/`) | IA | ✅ |
-| Revisar páginas no navegador local (`npm run dev`) e dar `git push` das melhorias da Fase 1 | Usuário | ⬜ |
-| Registrar domínio `.com` e publicar na Cloudflare Pages / Vercel + GA4 + Search Console | Usuário | ⬜ |
-| Obter `EIA_API_KEY` gratuita e rodar `scripts/fetch_eia_rates.py` para atualizar dados de 2026 | Usuário + IA | ⬜ |
-| Construir Fase 2 (`heat-pump-vs-gas/[state]`) e aplicar ao AdSense / Journey by Mediavine | IA + Usuário | ⬜ |
+| Revisar páginas no navegador local (`npm run dev`) e dar `git push` das melhorias da Fase 1 | Usuário | ✅ |
+| Registrar domínio `.com` (`homeenergycalcs.com`) e publicar na Cloudflare Pages + GA4 + Search Console | Usuário | ✅ |
+| Atualizar tarifas reais de 2026 via `scripts/fetch_eia_rates.py` (EIA API v2) | Usuário + IA | ✅ |
+| Construir Verticais Fase 2 (`heat-pump-vs-gas/[state]`) e Fase 3 (`solar-payback/[state]`) | IA + Usuário | ✅ |

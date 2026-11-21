@@ -1,0 +1,314 @@
+{
+  "AK": {
+    "cents_per_kwh": 29.41,
+    "period": "2026-08",
+    "state": "AK",
+    "stateDescription": "Alaska"
+  },
+  "AL": {
+    "cents_per_kwh": 16.33,
+    "period": "2026-08",
+    "state": "AL",
+    "stateDescription": "Alabama"
+  },
+  "AR": {
+    "cents_per_kwh": 14.37,
+    "period": "2026-08",
+    "state": "AR",
+    "stateDescription": "Arkansas"
+  },
+  "AZ": {
+    "cents_per_kwh": 15.05,
+    "period": "2026-08",
+    "state": "AZ",
+    "stateDescription": "Arizona"
+  },
+  "CA": {
+    "cents_per_kwh": 29.75,
+    "period": "2026-08",
+    "state": "CA",
+    "stateDescription": "California"
+  },
+  "CO": {
+    "cents_per_kwh": 17.17,
+    "period": "2026-08",
+    "state": "CO",
+    "stateDescription": "Colorado"
+  },
+  "CT": {
+    "cents_per_kwh": 24.51,
+    "period": "2026-08",
+    "state": "CT",
+    "stateDescription": "Connecticut"
+  },
+  "DC": {
+    "cents_per_kwh": 25.98,
+    "period": "2026-08",
+    "state": "DC",
+    "stateDescription": "District of Columbia"
+  },
+  "DE": {
+    "cents_per_kwh": 18.7,
+    "period": "2026-08",
+    "state": "DE",
+    "stateDescription": "Delaware"
+  },
+  "FL": {
+    "cents_per_kwh": 14.99,
+    "period": "2026-08",
+    "state": "FL",
+    "stateDescription": "Florida"
+  },
+  "GA": {
+    "cents_per_kwh": 15.9,
+    "period": "2026-08",
+    "state": "GA",
+    "stateDescription": "Georgia"
+  },
+  "HI": {
+    "cents_per_kwh": 47.18,
+    "period": "2026-08",
+    "state": "HI",
+    "stateDescription": "Hawaii"
+  },
+  "IA": {
+    "cents_per_kwh": 17.06,
+    "period": "2026-08",
+    "state": "IA",
+    "stateDescription": "Iowa"
+  },
+  "ID": {
+    "cents_per_kwh": 13.37,
+    "period": "2026-08",
+    "state": "ID",
+    "stateDescription": "Idaho"
+  },
+  "IL": {
+    "cents_per_kwh": 19.32,
+    "period": "2026-08",
+    "state": "IL",
+    "stateDescription": "Illinois"
+  },
+  "IN": {
+    "cents_per_kwh": 17.02,
+    "period": "2026-08",
+    "state": "IN",
+    "stateDescription": "Indiana"
+  },
+  "KS": {
+    "cents_per_kwh": 15.47,
+    "period": "2026-08",
+    "state": "KS",
+    "stateDescription": "Kansas"
+  },
+  "KY": {
+    "cents_per_kwh": 13.8,
+    "period": "2026-08",
+    "state": "KY",
+    "stateDescription": "Kentucky"
+  },
+  "LA": {
+    "cents_per_kwh": 12.87,
+    "period": "2026-08",
+    "state": "LA",
+    "stateDescription": "Louisiana"
+  },
+  "MA": {
+    "cents_per_kwh": 30.48,
+    "period": "2026-08",
+    "state": "MA",
+    "stateDescription": "Massachusetts"
+  },
+  "MD": {
+    "cents_per_kwh": 21.4,
+    "period": "2026-08",
+    "state": "MD",
+    "stateDescription": "Maryland"
+  },
+  "ME": {
+    "cents_per_kwh": 32.11,
+    "period": "2026-08",
+    "state": "ME",
+    "stateDescription": "Maine"
+  },
+  "MI": {
+    "cents_per_kwh": 22.99,
+    "period": "2026-08",
+    "state": "MI",
+    "stateDescription": "Michigan"
+  },
+  "MN": {
+    "cents_per_kwh": 17.2,
+    "period": "2026-08",
+    "state": "MN",
+    "stateDescription": "Minnesota"
+  },
+  "MO": {
+    "cents_per_kwh": 16.02,
+    "period": "2026-08",
+    "state": "MO",
+    "stateDescription": "Missouri"
+  },
+  "MS": {
+    "cents_per_kwh": 14.43,
+    "period": "2026-08",
+    "state": "MS",
+    "stateDescription": "Mississippi"
+  },
+  "MT": {
+    "cents_per_kwh": 15.57,
+    "period": "2026-08",
+    "state": "MT",
+    "stateDescription": "Montana"
+  },
+  "NC": {
+    "cents_per_kwh": 14.95,
+    "period": "2026-08",
+    "state": "NC",
+    "stateDescription": "North Carolina"
+  },
+  "ND": {
+    "cents_per_kwh": 13.31,
+    "period": "2026-08",
+    "state": "ND",
+    "stateDescription": "North Dakota"
+  },
+  "NE": {
+    "cents_per_kwh": 13.54,
+    "period": "2026-08",
+    "state": "NE",
+    "stateDescription": "Nebraska"
+  },
+  "NH": {
+    "cents_per_kwh": 27.64,
+    "period": "2026-08",
+    "state": "NH",
+    "stateDescription": "New Hampshire"
+  },
+  "NJ": {
+    "cents_per_kwh": 24.61,
+    "period": "2026-08",
+    "state": "NJ",
+    "stateDescription": "New Jersey"
+  },
+  "NM": {
+    "cents_per_kwh": 16.51,
+    "period": "2026-08",
+    "state": "NM",
+    "stateDescription": "New Mexico"
+  },
+  "NV": {
+    "cents_per_kwh": 12.72,
+    "period": "2026-08",
+    "state": "NV",
+    "stateDescription": "Nevada"
+  },
+  "NY": {
+    "cents_per_kwh": 28.65,
+    "period": "2026-08",
+    "state": "NY",
+    "stateDescription": "New York"
+  },
+  "OH": {
+    "cents_per_kwh": 19.38,
+    "period": "2026-08",
+    "state": "OH",
+    "stateDescription": "Ohio"
+  },
+  "OK": {
+    "cents_per_kwh": 14.82,
+    "period": "2026-08",
+    "state": "OK",
+    "stateDescription": "Oklahoma"
+  },
+  "OR": {
+    "cents_per_kwh": 15.92,
+    "period": "2026-08",
+    "state": "OR",
+    "stateDescription": "Oregon"
+  },
+  "PA": {
+    "cents_per_kwh": 21.77,
+    "period": "2026-08",
+    "state": "PA",
+    "stateDescription": "Pennsylvania"
+  },
+  "RI": {
+    "cents_per_kwh": 28.18,
+    "period": "2026-08",
+    "state": "RI",
+    "stateDescription": "Rhode Island"
+  },
+  "SC": {
+    "cents_per_kwh": 15.76,
+    "period": "2026-08",
+    "state": "SC",
+    "stateDescription": "South Carolina"
+  },
+  "SD": {
+    "cents_per_kwh": 15.15,
+    "period": "2026-08",
+    "state": "SD",
+    "stateDescription": "South Dakota"
+  },
+  "TN": {
+    "cents_per_kwh": 13.42,
+    "period": "2026-08",
+    "state": "TN",
+    "stateDescription": "Tennessee"
+  },
+  "TX": {
+    "cents_per_kwh": 15.91,
+    "period": "2026-08",
+    "state": "TX",
+    "stateDescription": "Texas"
+  },
+  "US": {
+    "cents_per_kwh": 18.16,
+    "period": "2026-08",
+    "state": "US",
+    "stateDescription": "U.S. Total"
+  },
+  "UT": {
+    "cents_per_kwh": 13.31,
+    "period": "2026-08",
+    "state": "UT",
+    "stateDescription": "Utah"
+  },
+  "VA": {
+    "cents_per_kwh": 17.64,
+    "period": "2026-08",
+    "state": "VA",
+    "stateDescription": "Virginia"
+  },
+  "VT": {
+    "cents_per_kwh": 23.84,
+    "period": "2026-08",
+    "state": "VT",
+    "stateDescription": "Vermont"
+  },
+  "WA": {
+    "cents_per_kwh": 14.63,
+    "period": "2026-08",
+    "state": "WA",
+    "stateDescription": "Washington"
+  },
+  "WI": {
+    "cents_per_kwh": 19.41,
+    "period": "2026-08",
+    "state": "WI",
+    "stateDescription": "Wisconsin"
+  },
+  "WV": {
+    "cents_per_kwh": 16.31,
+    "period": "2026-08",
+    "state": "WV",
+    "stateDescription": "West Virginia"
+  },
+  "WY": {
+    "cents_per_kwh": 14.43,
+    "period": "2026-08",
+    "state": "WY",
+    "stateDescription": "Wyoming"
+  }
+}
